@@ -54,7 +54,7 @@ void convert(std::string fbxPathFile)
       for(int i = 0; i < lRootNode->GetChildCount(); i++)
       {
          FbxNode * lNode = lRootNode->GetChild(i);
-         if(strcmp(lNode->GetName(),skeletonName.c_str())==0)
+         if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
          {
             navigateSkeleton(jointNames,
                              jointsPositions,
@@ -226,7 +226,7 @@ void convert(std::string fbxPathFile)
             {
                FbxNode * lNode = lRootNode->GetChild(j);
 
-               if(strcmp(lNode->GetName(),skeletonName.c_str())==0)
+               if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
                {
                   getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName);
                }

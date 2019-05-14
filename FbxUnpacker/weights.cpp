@@ -66,7 +66,7 @@ double Weights::getWeightsSum(const int vertexId) const
 
 void Weights::forcePartitionOfUnity()
 {
-   for(int i = 0; i<vertexNumber; ++i)
+   /*for(int i = 0; i<vertexNumber; ++i)
    {
       double weightsSum = getWeightsSum(i);
       if(weightsSum < 1)
@@ -80,5 +80,5 @@ void Weights::forcePartitionOfUnity()
          weights[i][max]+=difference;
       }
 
-   }
+   }*/
 }
