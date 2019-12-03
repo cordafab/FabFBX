@@ -37,18 +37,107 @@ void convert(std::string fbxPathFile)
       // The file has been imported; we can get rid of the importer.
       lImporter->Destroy();
    }
+   FbxNode * lRootNode;
    //end init
 
+   //Load Character
+   lRootNode = lScene->GetRootNode();
+
+   if(lRootNode)
+   {
+
+      std::vector<FbxNode *> nodes;
+      std::vector<FbxNode *> unorderedNodes;
+
+      int totalVertices = 0;
+      int totalPolygons = 0;
+
+      for(int i = 0; i < lRootNode->GetChildCount(); i++)
+      {
+         FbxNode * lNode = lRootNode->GetChild(i);
+         std::string nodeName(lNode->GetName());
+         size_t found = nodeName.find(characterName);
+
+         if (found != std::string::npos)
+         {
+            unorderedNodes.push_back(lNode);
+            totalVertices += lNode->GetMesh()->GetControlPointsCount();
+            totalPolygons += lNode->GetMesh()->GetPolygonCount();
+         }
+      }
+
+      if(unorderedNodes.size()>1)
+      {
+         nodes.resize(unorderedNodes.size());
+         for(unsigned long i=0; i<unorderedNodes.size();++i)
+         {
+            std::string name(unorderedNodes[i]->GetName());
+            std::string number = name.substr(9,name.size()-9);
+            int n = std::stoi( number );
+            nodes[n] = unorderedNodes[i];
+         }
+      }
+      else if(unorderedNodes.size() ==1)
+      {
+         nodes.push_back(unorderedNodes[0]);
+      }
+
+      std::vector<double> v;
+      v.reserve(totalVertices*3);
+
+      std::vector<int> f;
+      f.reserve(totalPolygons*3);
+
+      int pointOffsets = 0;
+      for(unsigned long i = 0; i<nodes.size(); ++i)
+      {
+
+         //FbxMesh* lMesh = (FbxMesh*) lNode->GetNodeAttribute();
+         FbxMesh * lMesh = nodes[i]->GetMesh();
+
+
+         int lControlPointsCount = lMesh->GetControlPointsCount();
+         int lPolygonCount = lMesh->GetPolygonCount();
+         FbxVector4 * lControlPoints = lMesh->GetControlPoints();
+         FbxAMatrix t = nodes[i]->EvaluateGlobalTransform();
+
+         for (int i = 0; i < lControlPointsCount; i++)
+         {
+            FbxVector4 controlPoint = t.MultT(lControlPoints[i]);
+
+            v.push_back(controlPoint[0]);
+            v.push_back(controlPoint[1]);
+            v.push_back(controlPoint[2]);
+         }
+
+
+         for (int i = 0; i < lPolygonCount; i++)
+         {
+            int lPolygonSize = lMesh->GetPolygonSize(i);
+
+            for (int j = 0; j < lPolygonSize; j++)
+            {
+               int lControlPointIndex = lMesh->GetPolygonVertex(i, j);
+               f.push_back(pointOffsets+lControlPointIndex);
+            }
+         }
+
+         pointOffsets += lControlPointsCount;
+      }
+      //Export Character to file
+      saveTrimeshObj(pathFileNoExt+"_char.txt", v, f);
+   }
+   //End Export Character
 
 
 
-   //export Skeleton
+   //Load Skeleton
    std::vector<std::string> jointNames;
    std::vector<double>      jointsPositions;
    std::vector<int>         fathers;
 
    //Read FBX Skeleton
-   FbxNode* lRootNode = lScene->GetRootNode();
+   lRootNode = lScene->GetRootNode();
    if(lRootNode)
    {
       for(int i = 0; i < lRootNode->GetChildCount(); i++)
@@ -65,7 +154,7 @@ void convert(std::string fbxPathFile)
       }
    }
 
-   //Export to file
+   //Export Skeleton to file
    saveSkeleton(pathFileNoExt+"_skel.txt",
                 jointNames,
                 jointsPositions,
@@ -427,4 +516,32 @@ std::vector<double> fromFbxMatrixToVector(const FbxAMatrix & matrix)
       }
    }
    return convertedTransform;
+}
+
+void saveTrimeshObj(const std::string         & filename ,
+                    const std::vector<double> & v        ,
+                    const std::vector<int>    & f        )
+{
+  std::ofstream fp;
+  fp.open (filename);
+  fp.precision(6);
+  fp.setf( std::ios::fixed, std:: ios::floatfield ); // floatfield set to fixed
+
+  if(!fp)
+  {
+     std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : saveOBJ() : couldn't open output file " << filename << endl;
+     exit(-1);
+  }
+
+  for(int i=0; i<(int)v.size(); i+=3)
+  {
+     fp << "v " << v[i] << " " << v[i+1] << " " << v[i+2] << std::endl;
+  }
+
+  for(int i=0; i<(int)f.size(); i+=3)
+  {
+     fp << "f " << f[i]+1 << " " << f[i+1]+1 << " " << f[i+2]+1 << std::endl;
+  }
+
+  fp.close();
 }
