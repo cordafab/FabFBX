@@ -125,7 +125,7 @@ void convert(std::string fbxPathFile)
          pointOffsets += lControlPointsCount;
       }
       //Export Character to file
-      saveTrimeshObj(pathFileNoExt+"_char.txt", v, f);
+      saveTrimeshObj(pathFileNoExt+".obj", v, f);
    }
    //End Export Character
 
@@ -529,7 +529,7 @@ void saveTrimeshObj(const std::string         & filename ,
 
   if(!fp)
   {
-     std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : saveOBJ() : couldn't open output file " << filename << endl;
+     std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : saveTrimeshObj() : couldn't open output file " << filename << std::endl;
      exit(-1);
   }
 

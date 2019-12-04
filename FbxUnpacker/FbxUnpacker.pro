@@ -1,4 +1,5 @@
 TEMPLATE = app
+
 CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
@@ -11,8 +12,8 @@ SOURCES += \
 ## LIB FBX configurations
 
 #Mac
-macx: LIBS += -L'/Applications/Autodesk/FBX SDK/2019.2/lib/clang/release/' -lfbxsdk
-macx: INCLUDEPATH +='/Applications/Autodesk/FBX SDK/2019.2/include/'
+macx: LIBS += -L'/Applications/Autodesk/FBX SDK/2020.0.1/lib/clang/release/' -lfbxsdk
+macx: INCLUDEPATH +='/Applications/Autodesk/FBX SDK/2020.0.1/include/'
 
 ## End FBX configurations
 
