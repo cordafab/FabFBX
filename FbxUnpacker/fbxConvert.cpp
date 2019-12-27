@@ -10,8 +10,8 @@ void convert(std::string fbxPathFile)
 
    std::string pathFileNoExt = fbxPathFile.substr(0, fbxPathFile.size()-4);
 
-   FbxManager * lSdkManager = nullptr;;
-   FbxIOSettings * ios = nullptr;;
+   FbxManager * lSdkManager = nullptr;
+   FbxIOSettings * ios = nullptr;
    FbxScene * lScene = nullptr;
    bool error;
 
@@ -84,18 +84,15 @@ void convert(std::string fbxPathFile)
 
       std::vector<double> v;
       v.reserve(totalVertices*3);
+      std::vector<std::vector<int>> f;
+      std::vector<int> newFace;
 
-      std::vector<int> f;
-      f.reserve(totalPolygons*3);
+
 
       int pointOffsets = 0;
       for(unsigned long i = 0; i<nodes.size(); ++i)
       {
-
-         //FbxMesh* lMesh = (FbxMesh*) lNode->GetNodeAttribute();
          FbxMesh * lMesh = nodes[i]->GetMesh();
-
-
          int lControlPointsCount = lMesh->GetControlPointsCount();
          int lPolygonCount = lMesh->GetPolygonCount();
          FbxVector4 * lControlPoints = lMesh->GetControlPoints();
@@ -104,7 +101,6 @@ void convert(std::string fbxPathFile)
          for (int i = 0; i < lControlPointsCount; i++)
          {
             FbxVector4 controlPoint = t.MultT(lControlPoints[i]);
-
             v.push_back(controlPoint[0]);
             v.push_back(controlPoint[1]);
             v.push_back(controlPoint[2]);
@@ -113,13 +109,17 @@ void convert(std::string fbxPathFile)
 
          for (int i = 0; i < lPolygonCount; i++)
          {
+            //std::cout << "NEW FACE: ";
             int lPolygonSize = lMesh->GetPolygonSize(i);
-
+            newFace.clear();
             for (int j = 0; j < lPolygonSize; j++)
             {
                int lControlPointIndex = lMesh->GetPolygonVertex(i, j);
-               f.push_back(pointOffsets+lControlPointIndex);
+               newFace.push_back(pointOffsets+lControlPointIndex+1);
+               //std::cout << pointOffsets+lControlPointIndex << " ";
             }
+            f.push_back(newFace);
+            //std::cout << std::endl;
          }
 
          pointOffsets += lControlPointsCount;
@@ -520,28 +520,37 @@ std::vector<double> fromFbxMatrixToVector(const FbxAMatrix & matrix)
 
 void saveTrimeshObj(const std::string         & filename ,
                     const std::vector<double> & v        ,
-                    const std::vector<int>    & f        )
+                    const std::vector<std::vector<int>>    & f        )
 {
-  std::ofstream fp;
-  fp.open (filename);
-  fp.precision(6);
-  fp.setf( std::ios::fixed, std:: ios::floatfield ); // floatfield set to fixed
+   std::ofstream fp;
+   fp.open (filename);
+   fp.precision(6);
+   fp.setf( std::ios::fixed, std:: ios::floatfield ); // floatfield set to fixed
 
-  if(!fp)
-  {
-     std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : saveTrimeshObj() : couldn't open output file " << filename << std::endl;
-     exit(-1);
-  }
+   if(!fp)
+   {
+      std::cout << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : saveTrimeshObj() : couldn't open output file " << filename << std::endl;
+      exit(-1);
+   }
+   else
+   {
+      std::cout << "Export character: " << filename << std::endl;
+   }
 
-  for(int i=0; i<(int)v.size(); i+=3)
-  {
-     fp << "v " << v[i] << " " << v[i+1] << " " << v[i+2] << std::endl;
-  }
+   for(int i=0; i<(int)v.size(); i+=3)
+   {
+      fp << "v " << v[i] << " " << v[i+1] << " " << v[i+2] << std::endl;
+   }
 
-  for(int i=0; i<(int)f.size(); i+=3)
-  {
-     fp << "f " << f[i]+1 << " " << f[i+1]+1 << " " << f[i+2]+1 << std::endl;
-  }
+   for(int i=0; i<(int)f.size(); i++)
+   {
+      fp << "f ";
+      for(int j=0; j<(int)f[i].size(); j++)
+      {
+         fp << f[i][j] << " ";
+      }
+      fp << std::endl;
+   }
 
-  fp.close();
+   fp.close();
 }

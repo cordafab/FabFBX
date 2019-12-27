@@ -22,10 +22,9 @@ void navigateSkeleton  (
                               int                                                father
                        );
 
-void saveTrimeshObj    (
-                        const std::string                                      & filename,
+void saveTrimeshObj    (const std::string                                      & filename,
                         const std::vector<double>                              & v,
-                        const std::vector<int>                                 & f
+                        const std::vector<std::vector<int> > &f
                        );
 
 void saveSkeleton      (
