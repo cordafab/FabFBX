@@ -501,21 +501,34 @@ void getNodeKeyframe(      FbxNode                              * node,
 
    FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
 
+   std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
+
+
    if(i==0)
    {
       //FbxVector4 r = defMat.GetR();
       //std::cout << "Node: " << node->GetName() << ".Time: " << t.GetFrameCount() <<  " === x:" << r[0] <<  " y:" << r[1] <<  " z:" << r[2] << std::endl;
 
-      FbxAnimCurveNode* lAnimCurveNode = node->LclRotation.GetCurveNode();
-      FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNode->GetCurve(0);
-      FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNode->GetCurve(1);
-      FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNode->GetCurve(2);
+      FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
+      FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
+      FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
+      FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
+      keyframe[3] = lAnimCurveNodeTx->EvaluateIndex(t.GetFrameCount());
+      keyframe[4] = lAnimCurveNodeTy->EvaluateIndex(t.GetFrameCount());
+      keyframe[5] = lAnimCurveNodeTz->EvaluateIndex(t.GetFrameCount());
+
+      FbxAnimCurveNode* lAnimCurveNodeR = node->LclRotation.GetCurveNode();
+      FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNodeR->GetCurve(0);
+      FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNodeR->GetCurve(1);
+      FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNodeR->GetCurve(2);
+      keyframe[0] = lAnimCurveNodeRx->EvaluateIndex(t.GetFrameCount());
+      keyframe[1] = lAnimCurveNodeRy->EvaluateIndex(t.GetFrameCount());
+      keyframe[2] = lAnimCurveNodeRz->EvaluateIndex(t.GetFrameCount());
 
       //std::cout << "Node: " << node->GetName() << ".Time: " << t.GetFrameCount() <<  "  C === x:" << lAnimCurveRx->KeyFind(t) <<  " y:" << lAnimCurveRy->KeyFind(t) <<  " z:" << lAnimCurveRz->KeyFind(t) << std::endl;
       //std::cout << "Node: " << node->GetName() << ".Time: " << t.GetFrameCount() <<  "  C === x:" << lAnimCurveNode->GetChannelName(0) <<  " y:" << lAnimCurveNode->GetChannelName(1) <<  " z:" << lAnimCurveNode->GetChannelName(2) << std::endl;
-      std::cout << "Node: " << node->GetName() << ".Time: " << t.GetFrameCount() <<  "  C === x:" << lAnimCurveNodeRx->Evaluate(t) << " y:" << lAnimCurveNodeRy->Evaluate(t) <<  " z:" << lAnimCurveNodeRz->Evaluate(t) << std::endl;
-         }
-   //FbxAnimCurve* rotationCurve = node->LclRotation.GetCurve(animLayer);
+      std::cout << "Node: " << node->GetName() << ".Time: " << t.GetFrameCount() <<  "  C === x:" << keyframe[0] << " y:" << keyframe[1] <<  " z:" << keyframe[2] << std::endl;
+   }
 
    deformedKeyframes[i] = fromFbxMatrixToVector(defMat);
 
