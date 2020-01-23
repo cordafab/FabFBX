@@ -292,7 +292,6 @@ void convert(std::string fbxPathFile)
    //compute the jointName-jointId conversion map
    FbxTime startTime, stopTime;
    FbxLongLong mAnimationLength;
-   FbxAnimLayer* animLayer = nullptr;
 
    int i;
    for (i = 0; i < lScene->GetSrcObjectCount<FbxAnimStack>(); i++)
@@ -303,7 +302,6 @@ void convert(std::string fbxPathFile)
       startTime = takeInfo->mLocalTimeSpan.GetStart();
       stopTime = takeInfo->mLocalTimeSpan.GetStop();
       mAnimationLength = startTime.GetFrameCount(FbxTime::eFrames24) - stopTime.GetFrameCount(FbxTime::eFrames24) + 1;
-      animLayer = lAnimStack->GetMember<FbxAnimLayer>(0);
    }
    {
       for (FbxLongLong i = startTime.GetFrameCount(FbxTime::eFrames24); i <= stopTime.GetFrameCount(FbxTime::eFrames24); ++i)
@@ -321,7 +319,7 @@ void convert(std::string fbxPathFile)
 
                if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
                {
-                  getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName, animLayer);
+                  getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName);
                }
             }
          }
@@ -502,8 +500,7 @@ void saveSkelAnimation(const std::string                                   & fil
 void getNodeKeyframe(      FbxNode                              * node,
                            const FbxTime                        & t,
                            std::vector<std::vector<double>>     & deformedKeyframes,
-                           const std::map<std::string, unsigned long> & nodeIdByName,
-                           FbxAnimLayer* animLayer)
+                           const std::map<std::string, unsigned long> & nodeIdByName)
 {
    unsigned long i = nodeIdByName.at(node->GetName());
 
@@ -527,15 +524,15 @@ void getNodeKeyframe(      FbxNode                              * node,
    FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNodeR->GetCurve(0);
    FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNodeR->GetCurve(1);
    FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNodeR->GetCurve(2);
-   keyframe[0] = lAnimCurveNodeRx->EvaluateIndex(t.GetFrameCount());
-   keyframe[1] = lAnimCurveNodeRy->EvaluateIndex(t.GetFrameCount());
-   keyframe[2] = lAnimCurveNodeRz->EvaluateIndex(t.GetFrameCount());
+   //keyframe[0] = lAnimCurveNodeRx->EvaluateIndex(t.GetFrameCount());
+   //keyframe[1] = lAnimCurveNodeRy->EvaluateIndex(t.GetFrameCount());
+   //keyframe[2] = lAnimCurveNodeRz->EvaluateIndex(t.GetFrameCount());
 
    deformedKeyframes[i] = keyframe;
 
    for(int lModelCount = 0; lModelCount < node->GetChildCount(); lModelCount++)
    {
-      getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName, animLayer);
+      getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName);
    }
 }
 
