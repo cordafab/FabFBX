@@ -464,7 +464,7 @@ void saveSkelAnimation(const std::string                                   & fil
       std::cout << "Export Skeleton Animation: " << filename << std::endl;
    }
 
-   fp << "t " << "c" << std::endl;   //animation exported c (r+t separated values) OR m (local matrix)
+   fp << "t " << "c" << std::endl;   //animation exported c curve (r+t separated values) OR m matrix (local transformation)
 
    for( unsigned long  i = 0; i < t.size(); ++i )
    {
@@ -508,25 +508,30 @@ void getNodeKeyframe(      FbxNode                              * node,
 
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
-
-   if(i==0)
+   if(i==0) //TO DO: export translation for all nodes
    {
       FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
-      FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
-      FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
-      FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
-      keyframe[3] = lAnimCurveNodeTx->EvaluateIndex(t.GetFrameCount());
-      keyframe[4] = lAnimCurveNodeTy->EvaluateIndex(t.GetFrameCount());
-      keyframe[5] = lAnimCurveNodeTz->EvaluateIndex(t.GetFrameCount());
-  }
+      if(lAnimCurveNodeT)
+      {
+         FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
+         FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
+         FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
+         keyframe[3] = lAnimCurveNodeTx->EvaluateIndex(t.GetFrameCount());
+         keyframe[4] = lAnimCurveNodeTy->EvaluateIndex(t.GetFrameCount());
+         keyframe[5] = lAnimCurveNodeTz->EvaluateIndex(t.GetFrameCount());
+      }
+   }
 
    FbxAnimCurveNode* lAnimCurveNodeR = node->LclRotation.GetCurveNode();
-   FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNodeR->GetCurve(0);
-   FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNodeR->GetCurve(1);
-   FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNodeR->GetCurve(2);
-   //keyframe[0] = lAnimCurveNodeRx->EvaluateIndex(t.GetFrameCount());
-   //keyframe[1] = lAnimCurveNodeRy->EvaluateIndex(t.GetFrameCount());
-   //keyframe[2] = lAnimCurveNodeRz->EvaluateIndex(t.GetFrameCount());
+   if(lAnimCurveNodeR)
+   {
+      FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNodeR->GetCurve(0);
+      FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNodeR->GetCurve(1);
+      FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNodeR->GetCurve(2);
+      keyframe[0] = lAnimCurveNodeRx->EvaluateIndex(t.GetFrameCount());
+      keyframe[1] = lAnimCurveNodeRy->EvaluateIndex(t.GetFrameCount());
+      keyframe[2] = lAnimCurveNodeRz->EvaluateIndex(t.GetFrameCount());
+   }
 
    deformedKeyframes[i] = keyframe;
 
