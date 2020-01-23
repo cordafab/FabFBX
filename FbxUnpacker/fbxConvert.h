@@ -45,12 +45,11 @@ void saveSkelAnimation (
                               std::vector<std::vector<std::vector<double>>>    & skelKeyframes //This is sooo ugly D: (but i don't care lol)
                        );
 
-void getNodeKeyframe   (
-                              FbxNode                                          * node,
+void getNodeKeyframe   (FbxNode                                          * node,
                         const FbxTime                                          & t,
                               std::vector<std::vector<double>>                 & deformedKeyframes,
                         const std::map<std::string, unsigned long>             & nodeIdByName
-                       );
+                       , FbxAnimLayer * animLayer);
 
 std::vector<double>
   fromFbxMatrixToVector(
