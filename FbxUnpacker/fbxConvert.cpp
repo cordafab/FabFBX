@@ -464,17 +464,17 @@ void saveSkelAnimation(const std::string                                   & fil
       std::cout << "Export Skeleton Animation: " << filename << std::endl;
    }
 
-   fp << "t " << "c" << std::endl;   //animation exported c curve (r+t separated values) OR m matrix (local transformation)
+   fp << "t " << "rt" << std::endl;   //animation exported rt curve (rotation & translation x, y, z components) OR M matrix (local transformation)
 
    for( unsigned long  i = 0; i < t.size(); ++i )
    {
       fp << "k " << t[i] << std::endl;   //keyframe
    }
 
-   for( unsigned long i = 0; i < t.size(); ++i )
+   for( unsigned long i = 0; i < t.size(); ++i )   //for each keyframe
    {
 
-      for( unsigned long j = 0; j < skelKeyframes[i].size(); ++j )
+      for( unsigned long j = 0; j < skelKeyframes[i].size(); ++j )   //for each skel joint
       {
 
          std::vector<double> kf = skelKeyframes[i][j];
