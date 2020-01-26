@@ -301,13 +301,13 @@ void convert(std::string fbxPathFile)
       FbxTakeInfo* takeInfo = lScene->GetTakeInfo(animStackName);
       startTime = takeInfo->mLocalTimeSpan.GetStart();
       stopTime = takeInfo->mLocalTimeSpan.GetStop();
-      mAnimationLength = startTime.GetFrameCount(FbxTime::eFrames24) - stopTime.GetFrameCount(FbxTime::eFrames24) + 1;
+      mAnimationLength = startTime.GetFrameCount(FbxTime::eFrames30) - stopTime.GetFrameCount(FbxTime::eFrames30) + 1;
    }
    {
-      for (FbxLongLong i = startTime.GetFrameCount(FbxTime::eFrames24); i <= stopTime.GetFrameCount(FbxTime::eFrames24); ++i)
+      for (FbxLongLong i = startTime.GetFrameCount(FbxTime::eFrames30); i <= stopTime.GetFrameCount(FbxTime::eFrames30); ++i)
       {
          FbxTime currTime;
-         currTime.SetFrame(i, FbxTime::eFrames24);
+         currTime.SetFrame(i, FbxTime::eFrames30);
          double t = ((double)(currTime.GetMilliSeconds())) / 1000.0;
          std::vector<std::vector<double>> deformedKeyframes(jointNames.size());
          FbxNode* lRootNode = lScene->GetRootNode();
