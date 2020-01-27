@@ -48,7 +48,8 @@ void saveSkelAnimation (
 void getNodeKeyframe   (FbxNode                                          * node,
                         const FbxTime                                          & t,
                               std::vector<std::vector<double>>                 & deformedKeyframes,
-                        const std::map<std::string, unsigned long>             & nodeIdByName
+                        const std::map<std::string, unsigned long>             & nodeIdByName,
+                        double scaleFactor
                         );
 
 std::vector<double>

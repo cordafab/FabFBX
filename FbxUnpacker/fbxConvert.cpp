@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <fbxsdk.h>
+#include <geom/boundingBox.h>
 
 void convert(std::string fbxPathFile)
 {
@@ -17,8 +18,7 @@ void convert(std::string fbxPathFile)
    FbxScene * lScene = nullptr;
    bool error;
 
-
-
+   BoundingBox bb;
 
    //init
    lSdkManager = FbxManager::Create();
@@ -128,7 +128,19 @@ void convert(std::string fbxPathFile)
       }
       //Export Character to file
       saveTrimeshObj(pathFileNoExt+".obj", v, f);
+
+
+
+
+      bb.clear();
+      for(int vId=0; vId<v.size()/3; ++vId)
+      {
+         cg3::Vec3d vertex(v[vId*3]+0,v[vId*3]+1,v[vId*3]+2);
+         bb.min = bb.min.min(vertex);
+         bb.max = bb.max.max(vertex);
+      }
    }
+
    //End Export Character
 
 
@@ -287,6 +299,7 @@ void convert(std::string fbxPathFile)
    //export Skeleton Animation
    std::vector<double>                           keyframesTimes;
    std::vector<std::vector<std::vector<double>>> skelKeyframes; //This is sooo ugly
+   double scaleFactor = bb.diagonal();
 
    //Read the animation
    //compute the jointName-jointId conversion map
@@ -319,7 +332,7 @@ void convert(std::string fbxPathFile)
 
                if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
                {
-                  getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName);
+                  getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName, scaleFactor);
                }
             }
          }
@@ -500,7 +513,8 @@ void saveSkelAnimation(const std::string                                   & fil
 void getNodeKeyframe(      FbxNode                              * node,
                            const FbxTime                        & t,
                            std::vector<std::vector<double>>     & deformedKeyframes,
-                           const std::map<std::string, unsigned long> & nodeIdByName)
+                           const std::map<std::string, unsigned long> & nodeIdByName,
+                           double   scaleFactor)
 {
    unsigned long i = nodeIdByName.at(node->GetName());
 
@@ -516,9 +530,9 @@ void getNodeKeyframe(      FbxNode                              * node,
          FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
          FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
          FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
-         keyframe[3] = lAnimCurveNodeTx->Evaluate(t);
-         keyframe[4] = lAnimCurveNodeTy->Evaluate(t);
-         keyframe[5] = lAnimCurveNodeTz->Evaluate(t);
+         if(lAnimCurveNodeTx) { keyframe[3] = lAnimCurveNodeTx->Evaluate(t); keyframe[3] /=  scaleFactor;}
+         if(lAnimCurveNodeTy) { keyframe[4] = lAnimCurveNodeTy->Evaluate(t); keyframe[4] /=  scaleFactor;}
+         if(lAnimCurveNodeTz) { keyframe[5] = lAnimCurveNodeTz->Evaluate(t); keyframe[5] /=  scaleFactor;}
       }
    }
 
@@ -540,7 +554,7 @@ void getNodeKeyframe(      FbxNode                              * node,
 
    for(int lModelCount = 0; lModelCount < node->GetChildCount(); lModelCount++)
    {
-      getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName);
+      getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName,scaleFactor);
    }
 }
 
