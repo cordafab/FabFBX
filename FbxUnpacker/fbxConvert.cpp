@@ -299,7 +299,8 @@ void convert(std::string fbxPathFile)
    //export Skeleton Animation
    std::vector<double>                           keyframesTimes;
    std::vector<std::vector<std::vector<double>>> skelKeyframes; //This is sooo ugly
-   double scaleFactor = bb.diagonal();
+   //double scaleFactor = bb.diagonal();
+   double scaleFactor = 1.0;
 
    //Read the animation
    //compute the jointName-jointId conversion map
