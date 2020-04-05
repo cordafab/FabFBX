@@ -3,9 +3,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <fbxsdk.h>
-#include <geom/boundingBox.h>
-
 FabFBX::FabFBX()
 {
    lSdkManager = nullptr;

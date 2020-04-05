@@ -5,8 +5,8 @@
 #include <vector>
 #include <map>
 
-#include "fbxsdk.h"
-#include "fbxsdk/fileio/fbxiosettings.h"
+#include <fbxsdk.h>
+#include <fbxsdk/fileio/fbxiosettings.h>
 
 #include "weights.h"
 
