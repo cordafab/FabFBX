@@ -19,6 +19,32 @@ public:
 
    bool convert();
 
+   bool exportCharacterGeometry(
+         const std::string & characterNodeName,
+         std::vector<double> & v,
+         std::vector<std::vector<int>> & f
+         );
+   bool exportSkeletonTopology(
+         const std::string & skeletonNodeName,
+         std::vector<std::string> & jointsNames,
+         std::vector<double> & jointsPositions,
+         std::vector<int> & fathers,
+         std::map<std::string, unsigned long> & jointIdByName
+         );
+   bool exportSkeletonWeights(
+         const std::string & characterNodeName,
+         const std::vector<std::string> & jointsNames,
+         const std::map<std::string, unsigned long> & jointIdByName,
+         Weights & skeletonWeights
+         );
+   bool exportSkeletonAnimation(
+         const std::string & skeletonNodeName,
+         const std::vector<std::string> & jointsNames,
+         const std::map<std::string, unsigned long> & jointIdByName,
+         std::vector<double> & keyframesTimes,
+         std::vector<std::vector<std::vector<double>>> & skelKeyframes //THIS IS UGLY
+         );
+
    static void navigateSkeleton(
          std::vector<std::string> & names,
          std::vector<double> & jointsPositions,
@@ -69,7 +95,6 @@ private:
    FbxManager * lSdkManager;
    FbxIOSettings * ios;
    FbxScene * lScene;
-   FbxNode * lRootNode;
 };
 
 #endif // FBXCONVERT_H

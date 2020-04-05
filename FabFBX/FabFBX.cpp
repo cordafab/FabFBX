@@ -11,7 +11,6 @@ FabFBX::FabFBX()
    lSdkManager = nullptr;
    ios = nullptr;
    lScene = nullptr;
-   lRootNode = nullptr;
 }
 
 bool FabFBX::init(std::string fbxPathFile)
@@ -41,14 +40,42 @@ bool FabFBX::convert()
    std::string skeletonName  = "Skeleton";
    std::string characterName = "Character";
 
-   BoundingBox bb;
+   std::vector<double> v;
+   std::vector<std::vector<int>> f;
+   exportCharacterGeometry(characterName, v, f);
+   FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
+   std::vector<std::string> jointsNames;
+   std::vector<double> jointsPositions;
+   std::vector<int> fathers;
+   std::map<std::string, unsigned long> jointIdByName;
+   exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+   FabFBX::saveSkeleton(pathFileNoExt+"_skel.txt", jointsNames, jointsPositions, fathers);
+
+   Weights skeletonWeights;
+   exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
+   FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
+
+   std::vector<double> keyframesTimes;
+   std::vector<std::vector<std::vector<double>>> skelKeyframes;
+   exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+   FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
+
+   return true;
+}
+
+bool FabFBX::exportCharacterGeometry(
+      const std::string & characterNodeName,
+      std::vector<double> & v,
+      std::vector<std::vector<int>> & f
+      )
+{
    //Load Character
+   FbxNode * lRootNode = nullptr;
    lRootNode = lScene->GetRootNode();
 
    if(lRootNode)
    {
-
       std::vector<FbxNode *> nodes;
       std::vector<FbxNode *> unorderedNodes;
 
@@ -59,7 +86,7 @@ bool FabFBX::convert()
       {
          FbxNode * lNode = lRootNode->GetChild(i);
          std::string nodeName(lNode->GetName());
-         size_t found = nodeName.find(characterName);
+         size_t found = nodeName.find(characterNodeName);
 
          if (found != std::string::npos)
          {
@@ -85,12 +112,9 @@ bool FabFBX::convert()
          nodes.push_back(unorderedNodes[0]);
       }
 
-      std::vector<double> v;
       v.reserve(totalVertices*3);
-      std::vector<std::vector<int>> f;
+
       std::vector<int> newFace;
-
-
 
       int pointOffsets = 0;
       for(unsigned long i = 0; i<nodes.size(); ++i)
@@ -109,7 +133,6 @@ bool FabFBX::convert()
             v.push_back(controlPoint[2]);
          }
 
-
          for (int i = 0; i < lPolygonCount; i++)
          {
             //std::cout << "NEW FACE: ";
@@ -124,33 +147,21 @@ bool FabFBX::convert()
             f.push_back(newFace);
             //std::cout << std::endl;
          }
-
          pointOffsets += lControlPointsCount;
       }
-      //Export Character to file
-      FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
-
-
-
-
-      bb.clear();
-      for(int vId=0; vId<v.size()/3; ++vId)
-      {
-         cg3::Vec3d vertex(v[vId*3]+0,v[vId*3]+1,v[vId*3]+2);
-         bb.min = bb.min.min(vertex);
-         bb.max = bb.max.max(vertex);
-      }
    }
+   return true;
+}
 
-   //End Export Character
-
-
-
-   //Load Skeleton
-   std::vector<std::string> jointNames;
-   std::vector<double>      jointsPositions;
-   std::vector<int>         fathers;
-
+bool FabFBX::exportSkeletonTopology(
+      const std::string & skeletonNodeName,
+      std::vector<std::string> & jointsNames,
+      std::vector<double> & jointsPositions,
+      std::vector<int> & fathers,
+      std::map<std::string, unsigned long> & jointIdByName
+      )
+{
+   FbxNode * lRootNode = nullptr;
    //Read FBX Skeleton
    lRootNode = lScene->GetRootNode();
    if(lRootNode)
@@ -158,35 +169,33 @@ bool FabFBX::convert()
       for(int i = 0; i < lRootNode->GetChildCount(); i++)
       {
          FbxNode * lNode = lRootNode->GetChild(i);
-         if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
+         if(strcmp(lNode->GetName(),skeletonNodeName.c_str())>=0)
          {
-            FabFBX::navigateSkeleton(jointNames,
+            FabFBX::navigateSkeleton(jointsNames,
                                      jointsPositions,
                                      fathers,
                                      lNode,
                                      -1);
          }
       }
+      //compute the jointName-jointId conversion map
+      for(unsigned long i=0; i<jointsNames.size(); ++i)
+      {
+         std::string name = jointsNames[i];
+         jointIdByName[name] = i;
+      }
    }
+   return true;
+}
 
-   //Export Skeleton to file
-   FabFBX::saveSkeleton(pathFileNoExt+"_skel.txt",
-                        jointNames,
-                        jointsPositions,
-                        fathers);
-
-
-   //end export Skeleton
-
-
-
-
-   //export Skeleton Weights
-   Weights skeletonWeights;
-
-   std::map<std::string, unsigned long> nodeIdByName;
-
-   //Read FBX Skeleton Weights
+bool FabFBX::exportSkeletonWeights(
+      const std::string & characterNodeName,
+      const std::vector<std::string> & jointsNames,
+      const std::map<std::string, unsigned long> & jointIdByName,
+      Weights & skeletonWeights
+      )
+{
+   FbxNode * lRootNode = nullptr;
    lRootNode = lScene->GetRootNode();
 
    if(lRootNode)
@@ -198,7 +207,7 @@ bool FabFBX::convert()
       {
          FbxNode * lNode = lRootNode->GetChild(i);
          std::string nodeName(lNode->GetName());
-         size_t found = nodeName.find(characterName);
+         size_t found = nodeName.find(characterNodeName);
          if (found != std::string::npos)
          {
             unorderedNodes.push_back(lNode);
@@ -226,17 +235,10 @@ bool FabFBX::convert()
          vertexOffset[i] = totalVertices;
          totalVertices += nodes[i]->GetMesh()->GetControlPointsCount();
       }
-      if(jointNames.size()>0)
+      if(jointsNames.size()>0)
       {
-         unsigned long numNodes = jointNames.size();
+         unsigned long numNodes = jointsNames.size();
          skeletonWeights.create(totalVertices,numNodes);
-
-         //compute the jointName-jointId conversion map
-         for(unsigned long i=0; i<numNodes; ++i)
-         {
-            std::string name = jointNames[i];
-            nodeIdByName[name] = i;
-         }
          //end conversion map computation
          for(unsigned long nodeIndex = 0; nodeIndex<nodes.size(); ++nodeIndex)
          {
@@ -267,8 +269,6 @@ bool FabFBX::convert()
                      for (int k = 0; k < lVertexIndexCount; ++k)
                      {
                         int lIndex = lCluster->GetControlPointIndices()[k];
-                        // Sometimes, the mesh can have less points than at the time of the skinning
-                        // because a smooth operator was active when skinning but has been deactivated during export.
                         if (lIndex >= lVertexCount)
                            continue;
                         double lWeight = lCluster->GetControlPointWeights()[k];
@@ -281,7 +281,7 @@ bool FabFBX::convert()
                                      << ": " << "CP: " << lIndex
                                      << ". Offset: " << vertexOffset[nodeIndex]
                                         << ". Weight: " << lWeight << std::endl;*/
-                        skeletonWeights.setWeight(nodeIdByName.at(name), vertexOffset[nodeIndex]+lIndex, lWeight);
+                        skeletonWeights.setWeight(jointIdByName.at(name), vertexOffset[nodeIndex]+lIndex, lWeight);
                      }
                   }
                }
@@ -289,21 +289,18 @@ bool FabFBX::convert()
          }
       }
    }
+   return true;
+}
 
-   //Export to file
-   FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
-   //end export Skeleton Weights
-
-
-
-
-   //export Skeleton Animation
-   std::vector<double>                           keyframesTimes;
-   std::vector<std::vector<std::vector<double>>> skelKeyframes; //This is sooo ugly
-   //double scaleFactor = bb.diagonal();
+bool FabFBX::exportSkeletonAnimation(
+      const std::string & skeletonNodeName,
+      const std::vector<std::string> & jointsNames,
+      const std::map<std::string, unsigned long> & jointIdByName,
+      std::vector<double> & keyframesTimes,
+      std::vector<std::vector<std::vector<double>>> & skelKeyframes) //This is sooo ugly
+{
    double scaleFactor = 1.0;
 
-   //Read the animation
    //compute the jointName-jointId conversion map
    FbxTime startTime, stopTime;
    FbxLongLong mAnimationLength;
@@ -324,7 +321,7 @@ bool FabFBX::convert()
          FbxTime currTime;
          currTime.SetFrame(i, FbxTime::eFrames30);
          double t = ((double)(currTime.GetMilliSeconds())) / 1000.0;
-         std::vector<std::vector<double>> deformedKeyframes(jointNames.size());
+         std::vector<std::vector<double>> deformedKeyframes(jointsNames.size());
          FbxNode* lRootNode = lScene->GetRootNode();
          if(lRootNode)
          {
@@ -332,27 +329,18 @@ bool FabFBX::convert()
             {
                FbxNode * lNode = lRootNode->GetChild(j);
 
-               if(strcmp(lNode->GetName(),skeletonName.c_str())>=0)
+               if(strcmp(lNode->GetName(),skeletonNodeName.c_str())>=0)
                {
-                  FabFBX::getNodeKeyframe(lNode, currTime, deformedKeyframes, nodeIdByName, scaleFactor);
+                  FabFBX::getNodeKeyframe(lNode, currTime, deformedKeyframes, jointIdByName, scaleFactor);
                }
             }
          }
-
-         //animator->addKeyframe(t,cageKeyframes,restKeyframes,deformedKeyframes);
-         //asyncAnimator->addSkelKeyframe(t,deformedKeyframes);
          skelKeyframes.push_back(deformedKeyframes);
          keyframesTimes.push_back(t);
       }
    }
-
-   //Export to file
-   FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
-   //end export Skeleton Animation
    return true;
 }
-
-
 
 
 //Skeleton
@@ -461,8 +449,8 @@ void FabFBX::saveWeights(const std::string & filename,
 
 
 //Animation
-void FabFBX::saveAnimation(const std::string                                   & filename,
-                           const std::vector<double>                           & t,
+void FabFBX::saveAnimation(const std::string & filename,
+                           const std::vector<double> & t,
                            std::vector<std::vector<std::vector<double>>> & skelKeyframes)
 {
    std::ofstream fp;
