@@ -5,9 +5,9 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
+    FabFBX.cpp \
     geom/boundingBox.cpp \
     main.cpp \
-    fbxConvert.cpp \
     weights.cpp
 
 ## LIB FBX configurations
@@ -19,7 +19,7 @@ macx: INCLUDEPATH +='/Applications/Autodesk/FBX SDK/2020.0.1/include/'
 ## End FBX configurations
 
 HEADERS += \
-    fbxConvert.h \
+    FabFBX.h \
     geom/boundingBox.h \
     geom/vec3.h \
     weights.h
