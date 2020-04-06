@@ -1,5 +1,7 @@
 #include "weights.h"
 
+#include <stdexcept>
+
 Weights::Weights()
 {
     create(0,0);

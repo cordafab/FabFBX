@@ -10,7 +10,7 @@ FabFBX::FabFBX()
    lScene = nullptr;
 }
 
-bool FabFBX::init(std::string fbxPathFile)
+bool FabFBX::create(std::string fbxPathFile)
 {
    pathFileNoExt = fbxPathFile.substr(0, fbxPathFile.size()-4);
 

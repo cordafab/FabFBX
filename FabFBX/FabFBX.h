@@ -15,7 +15,7 @@ class FabFBX{
 public:
    FabFBX();
 
-   bool init(std::string fbxPathFile);
+   bool create(std::string fbxPathFile);
 
    bool convert();
 
@@ -56,7 +56,7 @@ public:
    static void saveOBJ(
          const std::string & filename,
          const std::vector<double> & v,
-         const std::vector<std::vector<int> > &f
+         const std::vector<std::vector<int> > & f
          );
 
    static void saveSkeleton(

@@ -8,7 +8,7 @@ int main(int argc,char *argv[])
 
    if(argc!=2) return 1;
 
-   if(!fabFBX.init(argv[1])) return 1;
+   if(!fabFBX.create(argv[1])) return 1;
 
    bool execStatus;
    execStatus = fabFBX.convert();
