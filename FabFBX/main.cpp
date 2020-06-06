@@ -5,13 +5,52 @@
 int main(int argc,char *argv[])
 {
    FabFBX fabFBX;
+   bool execStatus = 0;
 
-   if(argc!=2) return 1;
+   if(argc==2)
+   {
+      if(!fabFBX.create(argv[1])) return 1;
+      execStatus = fabFBX.convert(RIG);
+   }
+   else if(argc==4)
+   {
+      if(!fabFBX.create(argv[1])) return 1;
+      std::string characterName(argv[2]);
+      std::string skeletonName(argv[3]);
+      execStatus = fabFBX.convert(RIG, characterName, skeletonName);
+   }
+   else if(argc>2)
+   {
+      std::string flag(argv[1]);
 
-   if(!fabFBX.create(argv[1])) return 1;
+      if(flag.compare("STE")==0)
+      {
+         if(!fabFBX.create(argv[2])) return 1;
+         if (argc==5)
+         {
+            std::string characterName(argv[3]);
+            std::string skeletonName(argv[4]);
+            execStatus = fabFBX.convert(STE, characterName, skeletonName);
+         }
+      }
 
-   bool execStatus;
-   execStatus = fabFBX.convert();
+      if(flag.compare("ls")==0)
+      {
+         if(!fabFBX.create(argv[2])) return 1;
+         execStatus = fabFBX.list();
+      }
+
+      if(flag.compare("anim")==0)
+      {
+         if(!fabFBX.create(argv[2])) return 1;
+         if (argc==5)
+         {
+            std::string characterName(argv[3]);
+            std::string skeletonName(argv[4]);
+            execStatus = fabFBX.convert(ANIM, characterName, skeletonName);
+         }
+      }
+   }
 
    return !execStatus;
 }

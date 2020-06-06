@@ -10,6 +10,10 @@
 
 #include "weights.h"
 
+#define RIG 0
+#define ANIM 1
+#define STE 99
+
 class FabFBX{
 
 public:
@@ -17,7 +21,10 @@ public:
 
    bool create(std::string fbxPathFile);
 
-   bool convert();
+   bool convert(int flag,
+                std::string characterName = "Character",
+                std::string skeletonName  = "Skeleton"
+                );
 
    bool exportCharacterGeometry(
          const std::string & characterNodeName,
@@ -44,6 +51,8 @@ public:
          std::vector<double> & keyframesTimes,
          std::vector<std::vector<std::vector<double>>> & skelKeyframes //THIS IS UGLY
          );
+
+   bool list();
 
    static void navigateSkeleton(
          std::vector<std::string> & names,

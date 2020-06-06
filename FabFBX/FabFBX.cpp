@@ -32,31 +32,95 @@ bool FabFBX::create(std::string fbxPathFile)
    return true; //execStatus==true
 }
 
-bool FabFBX::convert()
+bool FabFBX::convert(int flag, std::string characterName, std::string skeletonName)
 {
-   std::string skeletonName  = "Skeleton";
-   std::string characterName = "Character";
+   if(flag==RIG)
+   {
+      std::vector<double> v;
+      std::vector<std::vector<int>> f;
+      exportCharacterGeometry(characterName, v, f);
+      FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
-   std::vector<double> v;
-   std::vector<std::vector<int>> f;
-   exportCharacterGeometry(characterName, v, f);
-   FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
+      std::vector<std::string> jointsNames;
+      std::vector<double> jointsPositions;
+      std::vector<int> fathers;
+      std::map<std::string, unsigned long> jointIdByName;
+      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+      FabFBX::saveSkeleton(pathFileNoExt+"_skel.txt", jointsNames, jointsPositions, fathers);
 
-   std::vector<std::string> jointsNames;
-   std::vector<double> jointsPositions;
-   std::vector<int> fathers;
-   std::map<std::string, unsigned long> jointIdByName;
-   exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
-   FabFBX::saveSkeleton(pathFileNoExt+"_skel.txt", jointsNames, jointsPositions, fathers);
+      Weights skeletonWeights;
+      exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
+      FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
 
-   Weights skeletonWeights;
-   exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
-   FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
+      /*std::vector<double> keyframesTimes;
+      std::vector<std::vector<std::vector<double>>> skelKeyframes;
+      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);*/
+   }
 
-   std::vector<double> keyframesTimes;
-   std::vector<std::vector<std::vector<double>>> skelKeyframes;
-   exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
-   FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
+   if(flag==ANIM)
+   {
+      std::vector<std::string> jointsNames;
+      std::vector<double> jointsPositions;
+      std::vector<int> fathers;
+      std::map<std::string, unsigned long> jointIdByName;
+      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+
+      std::vector<double> keyframesTimes;
+      std::vector<std::vector<std::vector<double>>> skelKeyframes;
+      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
+   }
+
+   if(flag==STE)
+   {
+      //export mdl file
+      std::ofstream fp;
+      std::string filename = pathFileNoExt+".mdl";
+      fp.open (filename.c_str());
+      fp.precision(6);
+      fp.setf( std::ios::fixed, std::ios::floatfield ); // floatfield set to fixed
+
+      if(!fp)
+      {
+         std::cout << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : couldn't open mdl output file " << filename << std::endl;
+         exit(-1);
+      }
+      else
+      {
+         std::cout << "Export Ste model file: " << filename << std::endl;
+      }
+
+      fp << "m " << pathFileNoExt << ".obj" << std::endl;
+      fp << "s " << pathFileNoExt << ".skt" << std::endl;
+      fp << "w " << pathFileNoExt << ".skw" << std::endl;
+      fp << "a " << pathFileNoExt << ".ska" << std::endl;
+
+      fp.close();
+
+      //Export the files
+
+      std::vector<double> v;
+      std::vector<std::vector<int>> f;
+      exportCharacterGeometry(characterName, v, f);
+      FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
+
+      std::vector<std::string> jointsNames;
+      std::vector<double> jointsPositions;
+      std::vector<int> fathers;
+      std::map<std::string, unsigned long> jointIdByName;
+      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+      FabFBX::saveSkeleton(pathFileNoExt+".skt", jointsNames, jointsPositions, fathers);
+
+      Weights skeletonWeights;
+      exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
+      FabFBX::saveWeights(pathFileNoExt+".skw", skeletonWeights);
+
+      std::vector<double> keyframesTimes;
+      std::vector<std::vector<std::vector<double>>> skelKeyframes;
+      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      FabFBX::saveAnimation(pathFileNoExt+".ska",keyframesTimes,skelKeyframes);
+   }
 
    return true;
 }
@@ -334,6 +398,22 @@ bool FabFBX::exportSkeletonAnimation(
          }
          skelKeyframes.push_back(deformedKeyframes);
          keyframesTimes.push_back(t);
+      }
+   }
+   return true;
+}
+
+bool FabFBX::list()
+{
+   FbxNode * lRootNode = nullptr;
+
+   lRootNode = lScene->GetRootNode();
+   if(lRootNode)
+   {
+      for(int i = 0; i < lRootNode->GetChildCount(); i++)
+      {
+         FbxNode * lNode = lRootNode->GetChild(i);
+         std::cout << lNode->GetName() << std::endl;
       }
    }
    return true;
