@@ -13,6 +13,8 @@ FabFBX::FabFBX()
 bool FabFBX::create(std::string fbxPathFile)
 {
    pathFileNoExt = fbxPathFile.substr(0, fbxPathFile.size()-4);
+   std::size_t botDirPos = pathFileNoExt.find_last_of("/");
+   filename = pathFileNoExt.substr(botDirPos+1, pathFileNoExt.length());
 
    lSdkManager = FbxManager::Create();
    ios = FbxIOSettings::Create(lSdkManager, IOSROOT );
@@ -52,10 +54,10 @@ bool FabFBX::convert(int flag, std::string characterName, std::string skeletonNa
       exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
       FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
 
-      /*std::vector<double> keyframesTimes;
+      std::vector<double> keyframesTimes;
       std::vector<std::vector<std::vector<double>>> skelKeyframes;
       exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
-      FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);*/
+      FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
    }
 
    if(flag==ANIM)
@@ -76,25 +78,25 @@ bool FabFBX::convert(int flag, std::string characterName, std::string skeletonNa
    {
       //export mdl file
       std::ofstream fp;
-      std::string filename = pathFileNoExt+".mdl";
-      fp.open (filename.c_str());
+      std::string filenameSTE = pathFileNoExt+".mdl";
+      fp.open (filenameSTE.c_str());
       fp.precision(6);
       fp.setf( std::ios::fixed, std::ios::floatfield ); // floatfield set to fixed
 
       if(!fp)
       {
-         std::cout << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : couldn't open mdl output file " << filename << std::endl;
+         std::cout << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : couldn't open mdl output file " << filenameSTE << std::endl;
          exit(-1);
       }
       else
       {
-         std::cout << "Export Ste model file: " << filename << std::endl;
+         std::cout << "Export Ste model file: " << filenameSTE << std::endl;
       }
 
-      fp << "m " << pathFileNoExt << ".obj" << std::endl;
-      fp << "s " << pathFileNoExt << ".skt" << std::endl;
-      fp << "w " << pathFileNoExt << ".skw" << std::endl;
-      fp << "a " << pathFileNoExt << ".ska" << std::endl;
+      fp << "m " << filename << ".obj" << std::endl;
+      fp << "s " << filename << ".skt" << std::endl;
+      fp << "w " << filename << ".skw" << std::endl;
+      fp << "a " << filename << ".ska" << std::endl;
 
       fp.close();
 

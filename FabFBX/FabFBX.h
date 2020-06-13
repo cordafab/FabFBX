@@ -100,6 +100,7 @@ public:
 
 private:
    std::string pathFileNoExt;
+   std::string filename;
 
    FbxManager * lSdkManager;
    FbxIOSettings * ios;
