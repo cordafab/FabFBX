@@ -592,7 +592,7 @@ void FabFBX::getNodeKeyframe(      FbxNode                              * node,
 
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
-   if(i==0) //TO DO: export translation for all nodes
+   //if(i==0) //TO DO: export translation for all nodes
    {
       FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
       if(lAnimCurveNodeT)
