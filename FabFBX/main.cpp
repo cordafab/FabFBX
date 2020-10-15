@@ -21,11 +21,11 @@ int main(int argc,char *argv[])
    }
    else if(argc>2)
    {
-      std::string flag(argv[1]);
+      std::string flag(argv[2]);
 
       if(flag.compare("STE")==0)
       {
-         if(!fabFBX.createUnpacker(argv[2])) return 1;
+         if(!fabFBX.createUnpacker(argv[1])) return 1;
          if (argc==5)
          {
             std::string characterName(argv[3]);
@@ -36,13 +36,13 @@ int main(int argc,char *argv[])
 
       if(flag.compare("ls")==0)
       {
-         if(!fabFBX.createUnpacker(argv[2])) return 1;
+         if(!fabFBX.createUnpacker(argv[1])) return 1;
          execStatus = fabFBX.list();
       }
 
       if(flag.compare("anim")==0)
       {
-         if(!fabFBX.createUnpacker(argv[2])) return 1;
+         if(!fabFBX.createUnpacker(argv[1])) return 1;
          if (argc==5)
          {
             std::string characterName(argv[3]);

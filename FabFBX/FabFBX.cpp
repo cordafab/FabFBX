@@ -10,7 +10,7 @@ FabFBX::FabFBX()
    lScene = nullptr;
 }
 
-bool FabFBX::create(std::string fbxPathFile)
+bool FabFBX::createUnpacker(std::string fbxPathFile)
 {
    pathFileNoExt = fbxPathFile.substr(0, fbxPathFile.size()-4);
    std::size_t botDirPos = pathFileNoExt.find_last_of("/");
@@ -34,29 +34,29 @@ bool FabFBX::create(std::string fbxPathFile)
    return true; //execStatus==true
 }
 
-bool FabFBX::convert(int flag, std::string characterName, std::string skeletonName)
+bool FabFBX::unpack(int flag, std::string characterName, std::string skeletonName)
 {
    if(flag==RIG)
    {
       std::vector<double> v;
       std::vector<std::vector<int>> f;
-      exportCharacterGeometry(characterName, v, f);
+      unpackCharacterGeometry(characterName, v, f);
       FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
       std::vector<std::string> jointsNames;
       std::vector<double> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
-      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+      unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
       FabFBX::saveSkeleton(pathFileNoExt+"_skel.txt", jointsNames, jointsPositions, fathers);
 
       Weights skeletonWeights;
-      exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
+      unpackSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
       FabFBX::saveWeights(pathFileNoExt+"_skelWeights.txt", skeletonWeights);
 
       std::vector<double> keyframesTimes;
       std::vector<std::vector<std::vector<double>>> skelKeyframes;
-      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      unpackSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
       FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
    }
 
@@ -66,11 +66,11 @@ bool FabFBX::convert(int flag, std::string characterName, std::string skeletonNa
       std::vector<double> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
-      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+      unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
 
       std::vector<double> keyframesTimes;
       std::vector<std::vector<std::vector<double>>> skelKeyframes;
-      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      unpackSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
       FabFBX::saveAnimation(pathFileNoExt+"_sAnim.txt",keyframesTimes,skelKeyframes);
    }
 
@@ -104,30 +104,30 @@ bool FabFBX::convert(int flag, std::string characterName, std::string skeletonNa
 
       std::vector<double> v;
       std::vector<std::vector<int>> f;
-      exportCharacterGeometry(characterName, v, f);
+      unpackCharacterGeometry(characterName, v, f);
       FabFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
       std::vector<std::string> jointsNames;
       std::vector<double> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
-      exportSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
+      unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
       FabFBX::saveSkeleton(pathFileNoExt+".skt", jointsNames, jointsPositions, fathers);
 
       Weights skeletonWeights;
-      exportSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
+      unpackSkeletonWeights(characterName, jointsNames, jointIdByName, skeletonWeights);
       FabFBX::saveWeights(pathFileNoExt+".skw", skeletonWeights);
 
       std::vector<double> keyframesTimes;
       std::vector<std::vector<std::vector<double>>> skelKeyframes;
-      exportSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
+      unpackSkeletonAnimation(skeletonName, jointsNames, jointIdByName, keyframesTimes, skelKeyframes);
       FabFBX::saveAnimation(pathFileNoExt+".ska",keyframesTimes,skelKeyframes);
    }
 
    return true;
 }
 
-bool FabFBX::exportCharacterGeometry(
+bool FabFBX::unpackCharacterGeometry(
       const std::string & characterNodeName,
       std::vector<double> & v,
       std::vector<std::vector<int>> & f
@@ -216,7 +216,7 @@ bool FabFBX::exportCharacterGeometry(
    return true;
 }
 
-bool FabFBX::exportSkeletonTopology(
+bool FabFBX::unpackSkeletonTopology(
       const std::string & skeletonNodeName,
       std::vector<std::string> & jointsNames,
       std::vector<double> & jointsPositions,
@@ -251,7 +251,7 @@ bool FabFBX::exportSkeletonTopology(
    return true;
 }
 
-bool FabFBX::exportSkeletonWeights(
+bool FabFBX::unpackSkeletonWeights(
       const std::string & characterNodeName,
       const std::vector<std::string> & jointsNames,
       const std::map<std::string, unsigned long> & jointIdByName,
@@ -355,7 +355,7 @@ bool FabFBX::exportSkeletonWeights(
    return true;
 }
 
-bool FabFBX::exportSkeletonAnimation(
+bool FabFBX::unpackSkeletonAnimation(
       const std::string & skeletonNodeName,
       const std::vector<std::string> & jointsNames,
       const std::map<std::string, unsigned long> & jointIdByName,
