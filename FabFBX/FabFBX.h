@@ -19,32 +19,32 @@ class FabFBX{
 public:
    FabFBX();
 
-   bool create(std::string fbxPathFile);
+   bool createUnpacker(std::string fbxPathFile);
 
-   bool convert(int flag,
+   bool unpack(int flag,
                 std::string characterName = "Character",
                 std::string skeletonName  = "Skeleton"
                 );
 
-   bool exportCharacterGeometry(
+   bool unpackCharacterGeometry(
          const std::string & characterNodeName,
          std::vector<double> & v,
          std::vector<std::vector<int>> & f
          );
-   bool exportSkeletonTopology(
+   bool unpackSkeletonTopology(
          const std::string & skeletonNodeName,
          std::vector<std::string> & jointsNames,
          std::vector<double> & jointsPositions,
          std::vector<int> & fathers,
          std::map<std::string, unsigned long> & jointIdByName
          );
-   bool exportSkeletonWeights(
+   bool unpackSkeletonWeights(
          const std::string & characterNodeName,
          const std::vector<std::string> & jointsNames,
          const std::map<std::string, unsigned long> & jointIdByName,
          Weights & skeletonWeights
          );
-   bool exportSkeletonAnimation(
+   bool unpackSkeletonAnimation(
          const std::string & skeletonNodeName,
          const std::vector<std::string> & jointsNames,
          const std::map<std::string, unsigned long> & jointIdByName,
