@@ -378,30 +378,30 @@ bool FabFBX::unpackSkeletonAnimation(
       stopTime = takeInfo->mLocalTimeSpan.GetStop();
       mAnimationLength = startTime.GetFrameCount(FbxTime::eFrames30) - stopTime.GetFrameCount(FbxTime::eFrames30) + 1;
    }
-   {
-      for (FbxLongLong i = startTime.GetFrameCount(FbxTime::eFrames30); i <= stopTime.GetFrameCount(FbxTime::eFrames30); ++i)
-      {
-         FbxTime currTime;
-         currTime.SetFrame(i, FbxTime::eFrames30);
-         double t = ((double)(currTime.GetMilliSeconds())) / 1000.0;
-         std::vector<std::vector<double>> deformedKeyframes(jointsNames.size());
-         FbxNode* lRootNode = lScene->GetRootNode();
-         if(lRootNode)
-         {
-            for(int j = 0; j < lRootNode->GetChildCount(); j++)
-            {
-               FbxNode * lNode = lRootNode->GetChild(j);
 
-               if(strcmp(lNode->GetName(),skeletonNodeName.c_str())>=0)
-               {
-                  FabFBX::getNodeKeyframe(lNode, currTime, deformedKeyframes, jointIdByName, scaleFactor);
-               }
+   for (FbxLongLong i = startTime.GetFrameCount(FbxTime::eFrames30); i <= stopTime.GetFrameCount(FbxTime::eFrames30); ++i)
+   {
+      FbxTime currTime;
+      currTime.SetFrame(i, FbxTime::eFrames30);
+      double t = ((double)(currTime.GetMilliSeconds())) / 1000.0;
+      std::vector<std::vector<double>> deformedKeyframes(jointsNames.size());
+      FbxNode* lRootNode = lScene->GetRootNode();
+      if(lRootNode)
+      {
+         for(int j = 0; j < lRootNode->GetChildCount(); j++)
+         {
+            FbxNode * lNode = lRootNode->GetChild(j);
+
+            if(strcmp(lNode->GetName(),skeletonNodeName.c_str())>=0)
+            {
+               FabFBX::getNodeKeyframe(lNode, currTime, deformedKeyframes, jointIdByName, scaleFactor);
             }
          }
-         skelKeyframes.push_back(deformedKeyframes);
-         keyframesTimes.push_back(t);
       }
+      skelKeyframes.push_back(deformedKeyframes);
+      keyframesTimes.push_back(t);
    }
+
    return true;
 }
 
@@ -587,23 +587,18 @@ void FabFBX::getNodeKeyframe(      FbxNode                              * node,
                                    double   scaleFactor)
 {
    unsigned long i = nodeIdByName.at(node->GetName());
-
    FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
-
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
-   //if(i==0) //TO DO: export translation for all nodes
+   FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
+   if(lAnimCurveNodeT)
    {
-      FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
-      if(lAnimCurveNodeT)
-      {
-         FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
-         FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
-         FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
-         if(lAnimCurveNodeTx) { keyframe[3] = lAnimCurveNodeTx->Evaluate(t); keyframe[3] /=  scaleFactor;}
-         if(lAnimCurveNodeTy) { keyframe[4] = lAnimCurveNodeTy->Evaluate(t); keyframe[4] /=  scaleFactor;}
-         if(lAnimCurveNodeTz) { keyframe[5] = lAnimCurveNodeTz->Evaluate(t); keyframe[5] /=  scaleFactor;}
-      }
+      FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
+      FbxAnimCurve* lAnimCurveNodeTy = lAnimCurveNodeT->GetCurve(1);
+      FbxAnimCurve* lAnimCurveNodeTz = lAnimCurveNodeT->GetCurve(2);
+      if(lAnimCurveNodeTx) { keyframe[3] = lAnimCurveNodeTx->Evaluate(t); keyframe[3] /=  scaleFactor;}
+      if(lAnimCurveNodeTy) { keyframe[4] = lAnimCurveNodeTy->Evaluate(t); keyframe[4] /=  scaleFactor;}
+      if(lAnimCurveNodeTz) { keyframe[5] = lAnimCurveNodeTz->Evaluate(t); keyframe[5] /=  scaleFactor;}
    }
 
    FbxAnimCurveNode* lAnimCurveNodeR = node->LclRotation.GetCurveNode();
@@ -612,26 +607,22 @@ void FabFBX::getNodeKeyframe(      FbxNode                              * node,
       FbxAnimCurve* lAnimCurveNodeRx = lAnimCurveNodeR->GetCurve(0);
       FbxAnimCurve* lAnimCurveNodeRy = lAnimCurveNodeR->GetCurve(1);
       FbxAnimCurve* lAnimCurveNodeRz = lAnimCurveNodeR->GetCurve(2);
-      keyframe[0] = lAnimCurveNodeRx->Evaluate(t);
-      keyframe[1] = lAnimCurveNodeRy->Evaluate(t);
-      keyframe[2] = lAnimCurveNodeRz->Evaluate(t);
-
-      //if(i==0)
-      //std::cout <<  "frame " << t.GetFrameCount() << " : " << keyframe[0] << " " << keyframe[1] << " " << keyframe[2] << " " << std::endl;
+      if(lAnimCurveNodeRx) { keyframe[0] = lAnimCurveNodeRx->Evaluate(t); }
+      if(lAnimCurveNodeRy) { keyframe[1] = lAnimCurveNodeRy->Evaluate(t); }
+      if(lAnimCurveNodeRz) { keyframe[2] = lAnimCurveNodeRz->Evaluate(t); }
    }
 
    deformedKeyframes[i] = keyframe;
 
    for(int lModelCount = 0; lModelCount < node->GetChildCount(); lModelCount++)
    {
-      FabFBX::getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName,scaleFactor);
+      FabFBX::getNodeKeyframe(node->GetChild(lModelCount), t, deformedKeyframes, nodeIdByName, scaleFactor);
    }
 }
 
 std::vector<double> FabFBX::fromFbxMatrixToVector(const FbxAMatrix & matrix)
 {
    std::vector<double> convertedTransform(16);
-
    for(unsigned int i=0;i<4;++i)
    {
       for(unsigned int j=0;j<4;++j)
