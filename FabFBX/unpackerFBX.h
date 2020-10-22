@@ -1,5 +1,5 @@
-#ifndef FBXCONVERT_H
-#define FBXCONVERT_H
+#ifndef UNPACKERFBX_H
+#define UNPACKERFBX_H
 
 #include <string>
 #include <vector>
@@ -14,10 +14,10 @@
 #define ANIM 1
 #define STE 99
 
-class FabFBX{
+class UnpackerFBX{
 
 public:
-   FabFBX();
+   UnpackerFBX();
 
    bool createUnpacker(std::string fbxPathFile);
 
@@ -107,4 +107,4 @@ private:
    FbxScene * lScene;
 };
 
-#endif // FBXCONVERT_H
+#endif // UNPACKERFBX_H

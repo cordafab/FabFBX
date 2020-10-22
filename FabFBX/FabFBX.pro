@@ -5,9 +5,9 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-    FabFBX.cpp \
     geom/boundingBox.cpp \
     main.cpp \
+    unpackerFBX.cpp \
     weights.cpp
 
 ## LIB FBX configurations
@@ -34,7 +34,7 @@ unix:!macx {
 ## End FBX configurations
 
 HEADERS += \
-    FabFBX.h \
     geom/boundingBox.h \
     geom/vec3.h \
+    unpackerFBX.h \
     weights.h
