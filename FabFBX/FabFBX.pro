@@ -7,6 +7,7 @@ CONFIG -= qt
 SOURCES += \
     geom/boundingBox.cpp \
     main.cpp \
+    packerFBX.cpp \
     unpackerFBX.cpp \
     weights.cpp
 
@@ -36,5 +37,6 @@ unix:!macx {
 HEADERS += \
     geom/boundingBox.h \
     geom/vec3.h \
+    packerFBX.h \
     unpackerFBX.h \
     weights.h

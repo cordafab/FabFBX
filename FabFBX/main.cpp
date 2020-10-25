@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "unpackerFBX.h"
+#include "packerFBX.h"
 
 int main(int argc,char *argv[])
 {
@@ -49,6 +50,13 @@ int main(int argc,char *argv[])
             std::string skeletonName(argv[4]);
             execStatus = unpackerFBX.unpack(ANIM, characterName, skeletonName);
          }
+      }
+
+      if(flag.compare("pack")==0)
+      {
+         PackerFBX packerFBX;
+         if(!packerFBX.createPacker()) return 1;
+         execStatus = packerFBX.pack();
       }
    }
 
