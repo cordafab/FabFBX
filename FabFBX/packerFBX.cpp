@@ -7,10 +7,13 @@
 
 PackerFBX::PackerFBX()
 {
-   lSdkManager = NULL;
-   ios = NULL;
-   lScene = NULL;
+   lSdkManager = nullptr;
+   ios = nullptr;
+   lScene = nullptr;
    lResult = true;
+
+   mesh = nullptr;
+   skeletonRoot = nullptr;
 }
 
 bool PackerFBX::createPacker(std::string rigPathFile)
@@ -66,16 +69,16 @@ bool PackerFBX::pack()
 {
    //AddThumbnailToScene(lScene);
 
-   FbxNode* mesh = createMesh();
-   //FbxNode* lSkeletonRoot = CreateSkeleton(lScene, "Skeleton");
+   mesh = createMesh();
+   skeletonRoot = createSkeleton();
 
    // Build the node tree.
    FbxNode* lRootNode = lScene->GetRootNode();
    lRootNode->AddChild(mesh);
-   //lRootNode->AddChild(lSkeletonRoot);
+   lRootNode->AddChild(skeletonRoot);
 
    // Store poses
-   //LinkPatchToSkeleton(lScene, lPatch, lSkeletonRoot);
+   //createWeights();
    //StoreBindPose(lScene, lPatch);
    //StoreRestPose(lScene, lSkeletonRoot);
 
@@ -169,32 +172,145 @@ FbxNode* PackerFBX::createMesh()
 {
    FbxPatch* lPatch = FbxPatch::Create(lScene,"Character");
 
-       // Set patch properties.
-       lPatch->InitControlPoints(4, FbxPatch::eBSpline, 7, FbxPatch::eBSpline);
-       lPatch->SetStep(4, 4);
-       lPatch->SetClosed(true, false);
+   // Set patch properties.
+   lPatch->InitControlPoints(4, FbxPatch::eBSpline, 7, FbxPatch::eBSpline);
+   lPatch->SetStep(4, 4);
+   lPatch->SetClosed(true, false);
 
-       FbxVector4* lVector4 = lPatch->GetControlPoints();
-       int i;
+   FbxVector4* lVector4 = lPatch->GetControlPoints();
+   int i;
 
-       for (i = 0; i < 7; i++)
-       {
-           double lRadius = 15.0;
-           double lSegmentLength = 20.0;
-           lVector4[4*i + 0].Set(lRadius, 0.0, (i-3)*lSegmentLength);
-           lVector4[4*i + 1].Set(0.0, -lRadius, (i-3)*lSegmentLength);
-           lVector4[4*i + 2].Set(-lRadius, 0.0, (i-3)*lSegmentLength);
-           lVector4[4*i + 3].Set(0.0, lRadius, (i-3)*lSegmentLength);
-       }
+   for (i = 0; i < 7; i++)
+   {
+      double lRadius = 15.0;
+      double lSegmentLength = 20.0;
+      lVector4[4*i + 0].Set(lRadius, 0.0, (i-3)*lSegmentLength);
+      lVector4[4*i + 1].Set(0.0, -lRadius, (i-3)*lSegmentLength);
+      lVector4[4*i + 2].Set(-lRadius, 0.0, (i-3)*lSegmentLength);
+      lVector4[4*i + 3].Set(0.0, lRadius, (i-3)*lSegmentLength);
+   }
 
-       FbxNode* lNode = FbxNode::Create(lScene,"Character");
+   FbxNode* lNode = FbxNode::Create(lScene,"Character");
 
-       // Rotate the cylinder along the X axis so the axis
-       // of the cylinder is the same as the bone axis (Y axis)
-       FbxVector4 lR(-90.0, 0.0, 0.0);
-       lNode->LclRotation.Set(lR);
-       lNode->SetNodeAttribute(lPatch);
+   // Rotate the cylinder along the X axis so the axis
+   // of the cylinder is the same as the bone axis (Y axis)
+   FbxVector4 lR(-90.0, 0.0, 0.0);
+   lNode->LclRotation.Set(lR);
+   lNode->SetNodeAttribute(lPatch);
 
-       return lNode;
+   return lNode;
 }
 
+FbxNode* PackerFBX::createSkeleton()
+{
+   std::string name = "Skeleton";
+
+   // Create skeleton root.
+   FbxString lRootName(name.c_str());
+   lRootName += "Root";
+   FbxSkeleton* lSkeletonRootAttribute = FbxSkeleton::Create(lScene, lRootName);
+   lSkeletonRootAttribute->SetSkeletonType(FbxSkeleton::eRoot);
+   FbxNode* lSkeletonRoot = FbxNode::Create(lScene,lRootName.Buffer());
+   lSkeletonRoot->SetNodeAttribute(lSkeletonRootAttribute);
+   lSkeletonRoot->LclTranslation.Set(FbxVector4(0.0, -40.0, 0.0));
+
+   // Create skeleton first limb node.
+   FbxString lLimbNodeName1(name.c_str());
+   lLimbNodeName1 += "LimbNode1";
+   FbxSkeleton* lSkeletonLimbNodeAttribute1 = FbxSkeleton::Create(lScene,lLimbNodeName1);
+   lSkeletonLimbNodeAttribute1->SetSkeletonType(FbxSkeleton::eLimbNode);
+   lSkeletonLimbNodeAttribute1->Size.Set(1.0);
+   FbxNode* lSkeletonLimbNode1 = FbxNode::Create(lScene,lLimbNodeName1.Buffer());
+   lSkeletonLimbNode1->SetNodeAttribute(lSkeletonLimbNodeAttribute1);
+   lSkeletonLimbNode1->LclTranslation.Set(FbxVector4(0.0, 40.0, 0.0));
+
+   // Create skeleton second limb node.
+   FbxString lLimbNodeName2(name.c_str());
+   lLimbNodeName2 += "LimbNode2";
+   FbxSkeleton* lSkeletonLimbNodeAttribute2 = FbxSkeleton::Create(lScene,lLimbNodeName2);
+   lSkeletonLimbNodeAttribute2->SetSkeletonType(FbxSkeleton::eLimbNode);
+   lSkeletonLimbNodeAttribute2->Size.Set(1.0);
+   FbxNode* lSkeletonLimbNode2 = FbxNode::Create(lScene,lLimbNodeName2.Buffer());
+   lSkeletonLimbNode2->SetNodeAttribute(lSkeletonLimbNodeAttribute2);
+   lSkeletonLimbNode2->LclTranslation.Set(FbxVector4(0.0, 40.0, 0.0));
+
+   // Build skeleton node hierarchy.
+   lSkeletonRoot->AddChild(lSkeletonLimbNode1);
+   lSkeletonLimbNode1->AddChild(lSkeletonLimbNode2);
+
+   return lSkeletonRoot;
+}
+
+void PackerFBX::createWeights()
+{
+
+
+
+   int i, j;
+   FbxAMatrix lXMatrix;
+
+   FbxNode* lRoot = skeletonRoot;
+   FbxNode* lLimbNode1 = skeletonRoot->GetChild(0);
+   FbxNode* lLimbNode2 = lLimbNode1->GetChild(0);
+
+   // Bottom section of cylinder is clustered to skeleton root.
+   FbxCluster *lClusterToRoot = FbxCluster::Create(lScene,"");
+   lClusterToRoot->SetLink(lRoot);
+   lClusterToRoot->SetLinkMode(FbxCluster::eTotalOne);
+   for(i=0; i<4; ++i)
+      for(j=0; j<4; ++j)
+         lClusterToRoot->AddControlPointIndex(4*i + j, 1.0 - 0.25*i);
+
+   // Center section of cylinder is clustered to skeleton limb node.
+   FbxCluster* lClusterToLimbNode1 = FbxCluster::Create(lScene, "");
+   lClusterToLimbNode1->SetLink(lLimbNode1);
+   lClusterToLimbNode1->SetLinkMode(FbxCluster::eTotalOne);
+
+   for (i =1; i<6; ++i)
+      for (j=0; j<4; ++j)
+         lClusterToLimbNode1->AddControlPointIndex(4*i + j, (i == 1 || i == 5 ? 0.25 : 0.50));
+
+
+   // Top section of cylinder is clustered to skeleton limb.
+
+   FbxCluster * lClusterToLimbNode2 = FbxCluster::Create(lScene,"");
+   lClusterToLimbNode2->SetLink(lLimbNode2);
+   lClusterToLimbNode2->SetLinkMode(FbxCluster::eTotalOne);
+
+   for (i=3; i<7; ++i)
+      for (j=0; j<4; ++j)
+         lClusterToLimbNode2->AddControlPointIndex(4*i + j, 0.25*(i - 2));
+
+   // Now we have the Patch and the skeleton correctly positioned,
+   // set the Transform and TransformLink matrix accordingly.
+   FbxScene* lScene = mesh->GetScene();
+   if( lScene ) lXMatrix = mesh->EvaluateGlobalTransform();
+
+   lClusterToRoot->SetTransformMatrix(lXMatrix);
+   lClusterToLimbNode1->SetTransformMatrix(lXMatrix);
+   lClusterToLimbNode2->SetTransformMatrix(lXMatrix);
+
+
+
+   if( lScene ) lXMatrix = lRoot->EvaluateGlobalTransform();
+   lClusterToRoot->SetTransformLinkMatrix(lXMatrix);
+
+
+   if( lScene ) lXMatrix = lLimbNode1->EvaluateGlobalTransform();
+   lClusterToLimbNode1->SetTransformLinkMatrix(lXMatrix);
+
+
+   if( lScene ) lXMatrix = lLimbNode2->EvaluateGlobalTransform();
+   lClusterToLimbNode2->SetTransformLinkMatrix(lXMatrix);
+
+
+   // Add the clusters to the patch by creating a skin and adding those clusters to that skin.
+   // After add that skin.
+
+   FbxGeometry* lPatchAttribute = (FbxGeometry*) mesh->GetNodeAttribute();
+   FbxSkin* lSkin = FbxSkin::Create(lScene, "");
+   lSkin->AddCluster(lClusterToRoot);
+   lSkin->AddCluster(lClusterToLimbNode1);
+   lSkin->AddCluster(lClusterToLimbNode2);
+   lPatchAttribute->AddDeformer(lSkin);
+}

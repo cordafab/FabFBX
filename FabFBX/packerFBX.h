@@ -18,6 +18,8 @@ public:
 private:
    void saveFBX();
    FbxNode* createMesh();
+   FbxNode* createSkeleton();
+   void createWeights();
 
    std::string pathFileNoExt;
    std::string filename;
@@ -26,6 +28,9 @@ private:
    FbxIOSettings * ios;
    FbxScene* lScene;
    bool lResult;
+
+   FbxNode* mesh;
+   FbxNode* skeletonRoot;
 };
 
 #endif // PACKERFBX_H
