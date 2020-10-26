@@ -1,5 +1,8 @@
 #include "packerFBX.h"
 
+#include <iostream>
+#include <fstream>
+
 #define PACK 10
 
 PackerFBX::PackerFBX()
@@ -7,6 +10,7 @@ PackerFBX::PackerFBX()
    lSdkManager = NULL;
    ios = NULL;
    lScene = NULL;
+   lResult = true;
 }
 
 bool PackerFBX::createPacker(std::string rigPathFile)
@@ -62,12 +66,12 @@ bool PackerFBX::pack()
 {
    //AddThumbnailToScene(lScene);
 
-   //FbxNode* lPatch = CreatePatch(lScene, "Patch");
+   FbxNode* mesh = createMesh();
    //FbxNode* lSkeletonRoot = CreateSkeleton(lScene, "Skeleton");
 
    // Build the node tree.
-   //FbxNode* lRootNode = lScene->GetRootNode();
-   //lRootNode->AddChild(lPatch);
+   FbxNode* lRootNode = lScene->GetRootNode();
+   lRootNode->AddChild(mesh);
    //lRootNode->AddChild(lSkeletonRoot);
 
    // Store poses
@@ -154,11 +158,43 @@ void PackerFBX::saveFBX()
       // Destroy the exporter.
       lExporter->Destroy();
 
-
       if(lResult == false)
       {
          FBXSDK_printf("\n\nAn error occurred while saving the scene...\n");
       }
    }
+}
+
+FbxNode* PackerFBX::createMesh()
+{
+   FbxPatch* lPatch = FbxPatch::Create(lScene,"Character");
+
+       // Set patch properties.
+       lPatch->InitControlPoints(4, FbxPatch::eBSpline, 7, FbxPatch::eBSpline);
+       lPatch->SetStep(4, 4);
+       lPatch->SetClosed(true, false);
+
+       FbxVector4* lVector4 = lPatch->GetControlPoints();
+       int i;
+
+       for (i = 0; i < 7; i++)
+       {
+           double lRadius = 15.0;
+           double lSegmentLength = 20.0;
+           lVector4[4*i + 0].Set(lRadius, 0.0, (i-3)*lSegmentLength);
+           lVector4[4*i + 1].Set(0.0, -lRadius, (i-3)*lSegmentLength);
+           lVector4[4*i + 2].Set(-lRadius, 0.0, (i-3)*lSegmentLength);
+           lVector4[4*i + 3].Set(0.0, lRadius, (i-3)*lSegmentLength);
+       }
+
+       FbxNode* lNode = FbxNode::Create(lScene,"Character");
+
+       // Rotate the cylinder along the X axis so the axis
+       // of the cylinder is the same as the bone axis (Y axis)
+       FbxVector4 lR(-90.0, 0.0, 0.0);
+       lNode->LclRotation.Set(lR);
+       lNode->SetNodeAttribute(lPatch);
+
+       return lNode;
 }
 

@@ -55,7 +55,7 @@ int main(int argc,char *argv[])
       if(flag.compare("pack")==0)
       {
          PackerFBX packerFBX;
-         if(!packerFBX.createPacker()) return 1;
+         if(!packerFBX.createPacker(argv[1])) return 1;
          execStatus = packerFBX.pack();
       }
    }

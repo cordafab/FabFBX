@@ -17,6 +17,7 @@ public:
 
 private:
    void saveFBX();
+   FbxNode* createMesh();
 
    std::string pathFileNoExt;
    std::string filename;
