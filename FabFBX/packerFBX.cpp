@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #define PACK 10
 
@@ -18,9 +19,14 @@ PackerFBX::PackerFBX()
 
 bool PackerFBX::createPacker(std::string rigPathFile)
 {
+   fullPathFile = rigPathFile;
    pathFileNoExt = rigPathFile.substr(0, rigPathFile.size()-4);
    std::size_t botDirPos = pathFileNoExt.find_last_of("/");
    filename = pathFileNoExt.substr(botDirPos+1, pathFileNoExt.length());
+   pathNoFile = rigPathFile.substr(0, botDirPos+1);
+
+   std::cout << pathNoFile << std::endl;
+   std::cout << filename << std::endl;
 
    // Prepare the FBX SDK.
    //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
@@ -68,6 +74,13 @@ bool PackerFBX::createPacker(std::string rigPathFile)
 bool PackerFBX::pack()
 {
    //AddThumbnailToScene(lScene);
+
+   std::string charFilename;
+   std::string skelFilename;
+
+   readRigFile(fullPathFile,charFilename, skelFilename);
+   readOBJ(pathNoFile+charFilename, char_v, char_f);
+   readSkeletonFile(pathNoFile+skelFilename, joint_names, joint_fathers, joint_pos);
 
    mesh = createMesh();
    skeletonRoot = createSkeleton();
@@ -313,4 +326,143 @@ void PackerFBX::createWeights()
    lSkin->AddCluster(lClusterToLimbNode1);
    lSkin->AddCluster(lClusterToLimbNode2);
    lPatchAttribute->AddDeformer(lSkin);
+}
+
+void PackerFBX::readRigFile(std::string filename,
+                            std::string & charFilename,
+                            std::string & skelFilename)
+{
+   std::ifstream file(filename);
+
+   if (!file.is_open())
+   {
+      std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : loadOBJ() : couldn't open input file " << filename << std::endl;
+      exit(-1);
+   }
+
+   std::string line;
+   while (std::getline(file, line))
+   {
+      std::istringstream iss(line);
+
+      std::vector<std::string> lineData{
+         std::istream_iterator<std::string>(iss), {}
+      };
+
+      if (lineData[0].compare("m")==0)
+      {
+         charFilename = lineData[1];
+      }
+
+      if (lineData[0].compare("s")==0)
+      {
+         skelFilename = lineData[1];
+      }
+   }
+
+   file.close();
+}
+
+void PackerFBX::readOBJ(std::string filename,
+                        std::vector<std::vector<float>> & v,
+                        std::vector<std::vector<int>> & f)
+{
+   std::ifstream file(filename);
+
+   if (!file.is_open())
+   {
+      std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : loadOBJ() : couldn't open input file " << filename << std::endl;
+      exit(-1);
+   }
+
+   std::string line;
+   while (std::getline(file, line))
+   {
+      std::istringstream iss(line);
+
+      std::vector<std::string> lineData{
+         std::istream_iterator<std::string>(iss), {}
+      };
+
+      if (lineData[0].compare("v")==0)
+      {
+         std::vector<float> coords;
+         coords.push_back(std::stof(lineData[1]));
+         coords.push_back(std::stof(lineData[2]));
+         coords.push_back(std::stof(lineData[3]));
+         v.push_back(coords);
+
+         //std::cout << "v " << coords[0] << " " << coords[1] << " " << coords[2] << std::endl;
+      }
+
+      if (lineData[0].compare("f")==0)
+      {
+         std::vector<int> face;
+
+         if(lineData.size()==4)
+         {
+            face.push_back(std::stoi(lineData[1]));
+            face.push_back(std::stoi(lineData[2]));
+            face.push_back(std::stoi(lineData[3]));
+
+
+            //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << std::endl;
+
+         } else
+            if(lineData.size()==5)
+            {
+               face.push_back(std::stoi(lineData[1]));
+               face.push_back(std::stoi(lineData[2]));
+               face.push_back(std::stoi(lineData[3]));
+               face.push_back(std::stoi(lineData[4]));
+
+               //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
+            }
+         f.push_back(face);
+      }
+   }
+
+   file.close();
+}
+
+void PackerFBX::readSkeletonFile(std::string filename,
+                                 std::vector<std::string> & names,
+                                 std::vector<int> & fathers,
+                                 std::vector<std::vector<float>> & pos
+                                 )
+{
+   std::ifstream file(filename);
+
+   if (!file.is_open())
+   {
+      std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : loadOBJ() : couldn't open input file " << filename << std::endl;
+      exit(-1);
+   }
+
+   std::string line;
+   while (std::getline(file, line))
+   {
+      std::istringstream iss(line);
+
+      std::vector<std::string> lineData{
+         std::istream_iterator<std::string>(iss), {}
+      };
+
+      if (lineData[0].compare("j")==0)
+      {
+         names.push_back(lineData[2]);
+         fathers.push_back(std::stoi(lineData[3]));
+
+         std::vector<float> coords;
+         coords.push_back(std::stof(lineData[4]));
+         coords.push_back(std::stof(lineData[5]));
+         coords.push_back(std::stof(lineData[6]));
+         pos.push_back(coords);
+
+         //std::cout << lineData[2] << " " << lineData[3] << " " << lineData[4] << " " << lineData[5] << " " << lineData[6] << std::endl;
+      }
+
+   }
+
+   file.close();
 }
