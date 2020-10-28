@@ -206,12 +206,12 @@ FbxNode* PackerFBX::createMesh()
 
    FbxMesh* lMesh = FbxMesh::Create(lScene,"Character");
    lMesh->InitControlPoints(char_v.size());
-   FbxVector4* lControlPoints = lMesh->GetControlPoints();
+   //FbxVector4* lControlPoints = lMesh->GetControlPoints();
    for(int i=0; i<char_v.size(); ++i)
    {
       std::vector<float> v = char_v[i];
-      FbxVector4 controlPoint(v[0],v[1],v[2]);
-      lControlPoints[i] = controlPoint;
+      FbxVector4 controlPoint(v[0],v[1],v[2], 0.0);
+      lMesh->SetControlPointAt(controlPoint,i);
    }
 
    for(int i=0; i<char_f.size(); ++i)
@@ -219,15 +219,18 @@ FbxNode* PackerFBX::createMesh()
       lMesh->BeginPolygon();
       for(int j=0; j<char_f[i].size(); ++j)
       {
-         lMesh->AddPolygon(char_f[i][j]);
+         lMesh->AddPolygon(char_f[i][j]-1);
       }
       lMesh->EndPolygon();
    }
 
    //lMesh->BuildMeshEdgeArray();
 
+
+
    FbxNode* lNode = FbxNode::Create(lScene,"Character");
    lNode->SetNodeAttribute(lMesh);
+   lScene->AddNode(lNode);
 
    // Rotate the cylinder along the X axis so the axis
    // of the cylinder is the same as the bone axis (Y axis)
@@ -408,41 +411,49 @@ void PackerFBX::readOBJ(std::string filename,
          std::istream_iterator<std::string>(iss), {}
       };
 
-      if (lineData[0].compare("v")==0)
+      for(auto s:lineData)
       {
-         std::vector<float> coords;
-         coords.push_back(std::stof(lineData[1]));
-         coords.push_back(std::stof(lineData[2]));
-         coords.push_back(std::stof(lineData[3]));
-         v.push_back(coords);
-
-         //std::cout << "v " << coords[0] << " " << coords[1] << " " << coords[2] << std::endl;
+         std::cout << s << " ";
       }
-
-      if (lineData[0].compare("f")==0)
+      std::cout << std::endl;
+      if(lineData.size()>0)
       {
-         std::vector<int> face;
-
-         if(lineData.size()==4)
+         if (lineData[0].compare("v")==0)
          {
-            face.push_back(std::stoi(lineData[1]));
-            face.push_back(std::stoi(lineData[2]));
-            face.push_back(std::stoi(lineData[3]));
+            std::vector<float> coords;
+            coords.push_back(std::stof(lineData[1]));
+            coords.push_back(std::stof(lineData[2]));
+            coords.push_back(std::stof(lineData[3]));
+            v.push_back(coords);
 
+            //std::cout << "v " << coords[0] << " " << coords[1] << " " << coords[2] << std::endl;
+         }
 
-            //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << std::endl;
+         if (lineData[0].compare("f")==0)
+         {
+            std::vector<int> face;
 
-         } else
-            if(lineData.size()==5)
+            if(lineData.size()==4)
             {
                face.push_back(std::stoi(lineData[1]));
                face.push_back(std::stoi(lineData[2]));
                face.push_back(std::stoi(lineData[3]));
-               face.push_back(std::stoi(lineData[4]));
 
-               //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
-            }
-         f.push_back(face);
+
+               //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << std::endl;
+
+            } else
+               if(lineData.size()==5)
+               {
+                  face.push_back(std::stoi(lineData[1]));
+                  face.push_back(std::stoi(lineData[2]));
+                  face.push_back(std::stoi(lineData[3]));
+                  face.push_back(std::stoi(lineData[4]));
+
+                  //std::cout << "f " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
+               }
+            f.push_back(face);
+         }
       }
    }
 
