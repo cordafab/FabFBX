@@ -83,12 +83,12 @@ bool PackerFBX::pack()
    readSkeletonFile(pathNoFile+skelFilename, joint_names, joint_fathers, joint_pos);
 
    mesh = createMesh();
-   skeletonRoot = createSkeleton();
+   //skeletonRoot = createSkeleton();
 
    // Build the node tree.
    FbxNode* lRootNode = lScene->GetRootNode();
    lRootNode->AddChild(mesh);
-   lRootNode->AddChild(skeletonRoot);
+   //lRootNode->AddChild(skeletonRoot);
 
    // Store poses
    //createWeights();
@@ -183,7 +183,7 @@ void PackerFBX::saveFBX()
 
 FbxNode* PackerFBX::createMesh()
 {
-   FbxPatch* lPatch = FbxPatch::Create(lScene,"Character");
+   /*FbxPatch* lPatch = FbxPatch::Create(lScene,"Character");
 
    // Set patch properties.
    lPatch->InitControlPoints(4, FbxPatch::eBSpline, 7, FbxPatch::eBSpline);
@@ -202,14 +202,38 @@ FbxNode* PackerFBX::createMesh()
       lVector4[4*i + 2].Set(-lRadius, 0.0, (i-3)*lSegmentLength);
       lVector4[4*i + 3].Set(0.0, lRadius, (i-3)*lSegmentLength);
    }
+   */
+
+   FbxMesh* lMesh = FbxMesh::Create(lScene,"Character");
+   lMesh->InitControlPoints(char_v.size());
+   FbxVector4* lControlPoints = lMesh->GetControlPoints();
+   for(int i=0; i<char_v.size(); ++i)
+   {
+      std::vector<float> v = char_v[i];
+      FbxVector4 controlPoint(v[0],v[1],v[2]);
+      lControlPoints[i] = controlPoint;
+   }
+
+   for(int i=0; i<char_f.size(); ++i)
+   {
+      lMesh->BeginPolygon();
+      for(int j=0; j<char_f[i].size(); ++j)
+      {
+         lMesh->AddPolygon(char_f[i][j]);
+      }
+      lMesh->EndPolygon();
+   }
+
+   //lMesh->BuildMeshEdgeArray();
 
    FbxNode* lNode = FbxNode::Create(lScene,"Character");
+   lNode->SetNodeAttribute(lMesh);
 
    // Rotate the cylinder along the X axis so the axis
    // of the cylinder is the same as the bone axis (Y axis)
-   FbxVector4 lR(-90.0, 0.0, 0.0);
-   lNode->LclRotation.Set(lR);
-   lNode->SetNodeAttribute(lPatch);
+   // FbxVector4 lR(0.0, 0.0, 0.0);
+   // lNode->LclRotation.Set(lR);
+
 
    return lNode;
 }
