@@ -122,28 +122,28 @@ void PackerFBX::saveFBX()
    // Create an exporter.
    FbxExporter* lExporter = FbxExporter::Create(lSdkManager, "");
 
-   if( pFileFormat < 0 || pFileFormat >= lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount() )
-   {
-      // Write in fall back format in less no ASCII format found
-      pFileFormat = lSdkManager->GetIOPluginRegistry()->GetNativeWriterFormat();
-
-      //Try to export in ASCII if possible
-      int lFormatIndex, lFormatCount = lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount();
-
-      for (lFormatIndex=0; lFormatIndex<lFormatCount; lFormatIndex++)
-      {
-         if (lSdkManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
-         {
-            FbxString lDesc =lSdkManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
-            const char *lASCII = "ascii";
-            if (lDesc.Find(lASCII)>=0)
-            {
-               pFileFormat = lFormatIndex;
-               break;
-            }
-         }
-      }
-   }
+   //if( pFileFormat < 0 || pFileFormat >= lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount() )
+   //{
+   //   // Write in fall back format in less no ASCII format found
+   //   pFileFormat = lSdkManager->GetIOPluginRegistry()->GetNativeWriterFormat();
+   //
+   //   //Try to export in ASCII if possible
+   //   int lFormatIndex, lFormatCount = lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount();
+   //
+   //   for (lFormatIndex=0; lFormatIndex<lFormatCount; lFormatIndex++)
+   //   {
+   //      if (lSdkManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
+   //      {
+   //         FbxString lDesc =lSdkManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
+   //         const char *lASCII = "ascii";
+   //         if (lDesc.Find(lASCII)>=0)
+   //         {
+   //            pFileFormat = lFormatIndex;
+   //            break;
+   //         }
+   //      }
+   //   }
+   //}
 
    // Set the export states. By default, the export states are always set to
    // true except for the option eEXPORT_TEXTURE_AS_EMBEDDED. The code below
