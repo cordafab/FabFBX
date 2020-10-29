@@ -58,6 +58,7 @@ private:
    std::vector<std::string> joint_names;
    std::vector<int> joint_fathers;
    std::vector<std::vector<float>> joint_pos;
+   std::vector<FbxNode*> fbx_joints;
 };
 
 #endif // PACKERFBX_H

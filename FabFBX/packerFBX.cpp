@@ -83,12 +83,12 @@ bool PackerFBX::pack()
    readSkeletonFile(pathNoFile+skelFilename, joint_names, joint_fathers, joint_pos);
 
    mesh = createMesh();
-   //skeletonRoot = createSkeleton();
+   skeletonRoot = createSkeleton();
 
    // Build the node tree.
    FbxNode* lRootNode = lScene->GetRootNode();
    lRootNode->AddChild(mesh);
-   //lRootNode->AddChild(skeletonRoot);
+   lRootNode->AddChild(skeletonRoot);
 
    // Store poses
    //createWeights();
@@ -244,7 +244,43 @@ FbxNode* PackerFBX::createMesh()
 FbxNode* PackerFBX::createSkeleton()
 {
    std::string name = "Skeleton";
+   FbxNode* rootNode;
 
+   fbx_joints.resize(joint_names.size());
+
+   for(int i=0; i<joint_names.size(); ++i)
+   {
+      FbxString nodeName(joint_names[i].c_str());
+      FbxSkeleton* joint = FbxSkeleton::Create(lScene,nodeName);
+      if(joint_fathers[i]==-1)   joint->SetSkeletonType(FbxSkeleton::eRoot);
+      else                       joint->SetSkeletonType(FbxSkeleton::eLimbNode);
+
+      joint->Size.Set(1.0);
+      fbx_joints[i] = FbxNode::Create(lScene,nodeName.Buffer());
+      fbx_joints[i]->SetNodeAttribute(joint);
+
+      if(joint_fathers[i]!=-1)
+      {
+         double localTx =  joint_pos[i][0] - joint_pos[joint_fathers[i]][0];
+         double localTy =  joint_pos[i][1] - joint_pos[joint_fathers[i]][1];
+         double localTz =  joint_pos[i][2] - joint_pos[joint_fathers[i]][2];
+         fbx_joints[i]->LclTranslation.Set(FbxVector4(localTx,localTy,localTz));
+      }
+      else
+      {
+         fbx_joints[i]->LclTranslation.Set(FbxVector4(joint_pos[i][0],joint_pos[i][1],joint_pos[i][2]));
+      }
+   }
+
+   for(int i=0; i<joint_fathers.size(); ++i)
+   {
+      if(joint_fathers[i]==-1) rootNode=fbx_joints[i];
+      else fbx_joints[joint_fathers[i]]->AddChild(fbx_joints[i]);
+   }
+
+   lScene->AddNode(rootNode);
+
+   /*
    // Create skeleton root.
    FbxString lRootName(name.c_str());
    lRootName += "Root";
@@ -277,8 +313,9 @@ FbxNode* PackerFBX::createSkeleton()
    // Build skeleton node hierarchy.
    lSkeletonRoot->AddChild(lSkeletonLimbNode1);
    lSkeletonLimbNode1->AddChild(lSkeletonLimbNode2);
+   */
 
-   return lSkeletonRoot;
+   return rootNode;
 }
 
 void PackerFBX::createWeights()
