@@ -8,10 +8,10 @@
 
 PackerFBX::PackerFBX()
 {
-   lSdkManager = nullptr;
-   ios = nullptr;
-   lScene = nullptr;
-   lResult = true;
+   sdkManager = nullptr;
+   ioSettings = nullptr;
+   fbxScene = nullptr;
+   fbxSdkResult = true;
 
    mesh = nullptr;
    skeletonRoot = nullptr;
@@ -25,56 +25,46 @@ bool PackerFBX::createPacker(std::string rigPathFile)
    filename = pathFileNoExt.substr(botDirPos+1, pathFileNoExt.length());
    pathNoFile = rigPathFile.substr(0, botDirPos+1);
 
-   std::cout << pathNoFile << std::endl;
-   std::cout << filename << std::endl;
-
    // Prepare the FBX SDK.
    //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
-   lSdkManager = FbxManager::Create();
-   if( !lSdkManager )
+   sdkManager = FbxManager::Create();
+   if( !sdkManager )
    {
       FBXSDK_printf("Error: Unable to create FBX Manager!\n");
       exit(1);
    }
-   else FBXSDK_printf("Autodesk FBX SDK version %s\n", lSdkManager->GetVersion());
+   else FBXSDK_printf("Autodesk FBX SDK version %s\n", sdkManager->GetVersion());
 
    //Create an IOSettings object. This object holds all import/export settings.
-   FbxIOSettings* tIos = FbxIOSettings::Create(lSdkManager, IOSROOT);
-   lSdkManager->SetIOSettings(tIos);
-   ios = lSdkManager->GetIOSettings();
+   FbxIOSettings* tIos = FbxIOSettings::Create(sdkManager, IOSROOT);
+   sdkManager->SetIOSettings(tIos);
+   ioSettings = sdkManager->GetIOSettings();
 
    //Load plugins from the executable directory (optional)
    FbxString lPath = FbxGetApplicationDirectory();
-   lSdkManager->LoadPluginsDirectory(lPath.Buffer());
+   sdkManager->LoadPluginsDirectory(lPath.Buffer());
 
    //Create an FBX scene. This object holds most objects imported/exported from/to files.
-   lScene = FbxScene::Create(lSdkManager, "My Scene");
-   if( !lScene )
+   fbxScene = FbxScene::Create(sdkManager, "My Scene");
+   if( !fbxScene )
    {
       FBXSDK_printf("Error: Unable to create FBX scene!\n");
       exit(1);
    }
 
    // create scene info
-   FbxDocumentInfo* sceneInfo = FbxDocumentInfo::Create(lSdkManager,"SceneInfo");
+   FbxDocumentInfo* sceneInfo = FbxDocumentInfo::Create(sdkManager,"SceneInfo");
    sceneInfo->mTitle = filename.c_str();
-   //sceneInfo->mSubject = "Illustrates the creation and animation of a deformed cylinder.";
-   //sceneInfo->mAuthor = "ExportScene01.exe sample program.";
-   //sceneInfo->mRevision = "rev. 1.0";
-   //sceneInfo->mKeywords = "deformed cylinder";
-   //sceneInfo->mComment = "no particular comments required.";
 
    // we need to add the sceneInfo before calling AddThumbNailToScene because
    // that function is asking the scene for the sceneInfo.
-   lScene->SetSceneInfo(sceneInfo);
+   fbxScene->SetSceneInfo(sceneInfo);
 
    return true; //execStatus==true
 }
 
 bool PackerFBX::pack()
 {
-   //AddThumbnailToScene(lScene);
-
    std::string charFilename;
    std::string skelFilename;
 
@@ -86,7 +76,7 @@ bool PackerFBX::pack()
    skeletonRoot = createSkeleton();
 
    // Build the node tree.
-   FbxNode* lRootNode = lScene->GetRootNode();
+   FbxNode* lRootNode = fbxScene->GetRootNode();
    lRootNode->AddChild(mesh);
    lRootNode->AddChild(skeletonRoot);
 
@@ -101,80 +91,53 @@ bool PackerFBX::pack()
    saveFBX();
 
    //Delete the FBX Manager. All the objects that have been allocated using the FBX Manager and that haven't been explicitly destroyed are also automatically destroyed.
-   if( lSdkManager ) lSdkManager->Destroy();
-   if( lResult )
+   if( sdkManager ) sdkManager->Destroy();
+   if( fbxSdkResult )
    {
       FBXSDK_printf("Program Success!\n");
       return true; //execStatus==true
    }
-   return false;
+   return false; //execStatus==false
 }
 
 void PackerFBX::saveFBX()
 {
    // Save the scene.
-   int pFileFormat=-1;
+   int pFileFormat=-1; //Fbx Binary format
    bool pEmbedMedia=false;
 
    int lMajor, lMinor, lRevision;
    bool lStatus = true;
 
    // Create an exporter.
-   FbxExporter* lExporter = FbxExporter::Create(lSdkManager, "");
-
-   //if( pFileFormat < 0 || pFileFormat >= lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount() )
-   //{
-   //   // Write in fall back format in less no ASCII format found
-   //   pFileFormat = lSdkManager->GetIOPluginRegistry()->GetNativeWriterFormat();
-   //
-   //   //Try to export in ASCII if possible
-   //   int lFormatIndex, lFormatCount = lSdkManager->GetIOPluginRegistry()->GetWriterFormatCount();
-   //
-   //   for (lFormatIndex=0; lFormatIndex<lFormatCount; lFormatIndex++)
-   //   {
-   //      if (lSdkManager->GetIOPluginRegistry()->WriterIsFBX(lFormatIndex))
-   //      {
-   //         FbxString lDesc =lSdkManager->GetIOPluginRegistry()->GetWriterFormatDescription(lFormatIndex);
-   //         const char *lASCII = "ascii";
-   //         if (lDesc.Find(lASCII)>=0)
-   //         {
-   //            pFileFormat = lFormatIndex;
-   //            break;
-   //         }
-   //      }
-   //   }
-   //}
+   FbxExporter* lExporter = FbxExporter::Create(sdkManager, "");
 
    // Set the export states. By default, the export states are always set to
    // true except for the option eEXPORT_TEXTURE_AS_EMBEDDED. The code below
    // shows how to change these states.
-   ios->SetBoolProp(EXP_FBX_MATERIAL,        true);
-   ios->SetBoolProp(EXP_FBX_TEXTURE,         true);
-   ios->SetBoolProp(EXP_FBX_EMBEDDED,        pEmbedMedia);
-   ios->SetBoolProp(EXP_FBX_SHAPE,           true);
-   ios->SetBoolProp(EXP_FBX_GOBO,            true);
-   ios->SetBoolProp(EXP_FBX_ANIMATION,       true);
-   ios->SetBoolProp(EXP_FBX_GLOBAL_SETTINGS, true);
+   ioSettings->SetBoolProp(EXP_FBX_MATERIAL,        true);
+   ioSettings->SetBoolProp(EXP_FBX_TEXTURE,         true);
+   ioSettings->SetBoolProp(EXP_FBX_EMBEDDED,        pEmbedMedia);
+   ioSettings->SetBoolProp(EXP_FBX_SHAPE,           true);
+   ioSettings->SetBoolProp(EXP_FBX_GOBO,            true);
+   ioSettings->SetBoolProp(EXP_FBX_ANIMATION,       true);
+   ioSettings->SetBoolProp(EXP_FBX_GLOBAL_SETTINGS, true);
 
    // Initialize the exporter by providing a filename.
-   if(lExporter->Initialize((pathFileNoExt+".fbx").c_str(), pFileFormat, lSdkManager->GetIOSettings()) == false)
+   if(lExporter->Initialize((pathFileNoExt+".fbx").c_str(), pFileFormat, sdkManager->GetIOSettings()) == false)
    {
       FBXSDK_printf("Call to FbxExporter::Initialize() failed.\n");
       FBXSDK_printf("Error returned: %s\n\n", lExporter->GetStatus().GetErrorString());
-      lResult = false;
+      fbxSdkResult = false;
    }
    else  {
-
       FbxManager::GetFileFormatVersion(lMajor, lMinor, lRevision);
       FBXSDK_printf("FBX file format version %d.%d.%d\n\n", lMajor, lMinor, lRevision);
-
       // Export the scene.
-      lStatus = lExporter->Export(lScene);
-
+      lStatus = lExporter->Export(fbxScene);
       // Destroy the exporter.
       lExporter->Destroy();
-
-      if(lResult == false)
+      if(fbxSdkResult == false)
       {
          FBXSDK_printf("\n\nAn error occurred while saving the scene...\n");
       }
@@ -183,60 +146,29 @@ void PackerFBX::saveFBX()
 
 FbxNode* PackerFBX::createMesh()
 {
-   /*FbxPatch* lPatch = FbxPatch::Create(lScene,"Character");
-
-   // Set patch properties.
-   lPatch->InitControlPoints(4, FbxPatch::eBSpline, 7, FbxPatch::eBSpline);
-   lPatch->SetStep(4, 4);
-   lPatch->SetClosed(true, false);
-
-   FbxVector4* lVector4 = lPatch->GetControlPoints();
-   int i;
-
-   for (i = 0; i < 7; i++)
-   {
-      double lRadius = 15.0;
-      double lSegmentLength = 20.0;
-      lVector4[4*i + 0].Set(lRadius, 0.0, (i-3)*lSegmentLength);
-      lVector4[4*i + 1].Set(0.0, -lRadius, (i-3)*lSegmentLength);
-      lVector4[4*i + 2].Set(-lRadius, 0.0, (i-3)*lSegmentLength);
-      lVector4[4*i + 3].Set(0.0, lRadius, (i-3)*lSegmentLength);
-   }
-   */
-
-   FbxMesh* lMesh = FbxMesh::Create(lScene,"Character");
+   FbxMesh* lMesh = FbxMesh::Create(fbxScene,"Character");
    lMesh->InitControlPoints(char_v.size());
    //FbxVector4* lControlPoints = lMesh->GetControlPoints();
-   for(int i=0; i<char_v.size(); ++i)
+   for(unsigned long i=0; i<char_v.size(); ++i)
    {
       std::vector<float> v = char_v[i];
       FbxVector4 controlPoint(v[0],v[1],v[2], 0.0);
       lMesh->SetControlPointAt(controlPoint,i);
    }
 
-   for(int i=0; i<char_f.size(); ++i)
+   for(unsigned long i=0; i<char_f.size(); ++i)
    {
       lMesh->BeginPolygon();
-      for(int j=0; j<char_f[i].size(); ++j)
+      for(unsigned long j=0; j<char_f[i].size(); ++j)
       {
          lMesh->AddPolygon(char_f[i][j]-1);
       }
       lMesh->EndPolygon();
    }
 
-   //lMesh->BuildMeshEdgeArray();
-
-
-
-   FbxNode* lNode = FbxNode::Create(lScene,"Character");
+   FbxNode* lNode = FbxNode::Create(fbxScene,"Character");
    lNode->SetNodeAttribute(lMesh);
-   lScene->AddNode(lNode);
-
-   // Rotate the cylinder along the X axis so the axis
-   // of the cylinder is the same as the bone axis (Y axis)
-   // FbxVector4 lR(0.0, 0.0, 0.0);
-   // lNode->LclRotation.Set(lR);
-
+   fbxScene->AddNode(lNode);
 
    return lNode;
 }
@@ -248,15 +180,15 @@ FbxNode* PackerFBX::createSkeleton()
 
    fbx_joints.resize(joint_names.size());
 
-   for(int i=0; i<joint_names.size(); ++i)
+   for(unsigned long i=0; i<joint_names.size(); ++i)
    {
       FbxString nodeName(joint_names[i].c_str());
-      FbxSkeleton* joint = FbxSkeleton::Create(lScene,nodeName);
+      FbxSkeleton* joint = FbxSkeleton::Create(fbxScene,nodeName);
       if(joint_fathers[i]==-1)   joint->SetSkeletonType(FbxSkeleton::eRoot);
       else                       joint->SetSkeletonType(FbxSkeleton::eLimbNode);
 
       joint->Size.Set(1.0);
-      fbx_joints[i] = FbxNode::Create(lScene,nodeName.Buffer());
+      fbx_joints[i] = FbxNode::Create(fbxScene,nodeName.Buffer());
       fbx_joints[i]->SetNodeAttribute(joint);
 
       if(joint_fathers[i]!=-1)
@@ -272,57 +204,20 @@ FbxNode* PackerFBX::createSkeleton()
       }
    }
 
-   for(int i=0; i<joint_fathers.size(); ++i)
+   for(unsigned long i=0; i<joint_fathers.size(); ++i)
    {
       if(joint_fathers[i]==-1) rootNode=fbx_joints[i];
       else fbx_joints[joint_fathers[i]]->AddChild(fbx_joints[i]);
    }
 
-   lScene->AddNode(rootNode);
-
-   /*
-   // Create skeleton root.
-   FbxString lRootName(name.c_str());
-   lRootName += "Root";
-   FbxSkeleton* lSkeletonRootAttribute = FbxSkeleton::Create(lScene, lRootName);
-   lSkeletonRootAttribute->SetSkeletonType(FbxSkeleton::eRoot);
-   FbxNode* lSkeletonRoot = FbxNode::Create(lScene,lRootName.Buffer());
-   lSkeletonRoot->SetNodeAttribute(lSkeletonRootAttribute);
-   lSkeletonRoot->LclTranslation.Set(FbxVector4(0.0, -40.0, 0.0));
-
-   // Create skeleton first limb node.
-   FbxString lLimbNodeName1(name.c_str());
-   lLimbNodeName1 += "LimbNode1";
-   FbxSkeleton* lSkeletonLimbNodeAttribute1 = FbxSkeleton::Create(lScene,lLimbNodeName1);
-   lSkeletonLimbNodeAttribute1->SetSkeletonType(FbxSkeleton::eLimbNode);
-   lSkeletonLimbNodeAttribute1->Size.Set(1.0);
-   FbxNode* lSkeletonLimbNode1 = FbxNode::Create(lScene,lLimbNodeName1.Buffer());
-   lSkeletonLimbNode1->SetNodeAttribute(lSkeletonLimbNodeAttribute1);
-   lSkeletonLimbNode1->LclTranslation.Set(FbxVector4(0.0, 40.0, 0.0));
-
-   // Create skeleton second limb node.
-   FbxString lLimbNodeName2(name.c_str());
-   lLimbNodeName2 += "LimbNode2";
-   FbxSkeleton* lSkeletonLimbNodeAttribute2 = FbxSkeleton::Create(lScene,lLimbNodeName2);
-   lSkeletonLimbNodeAttribute2->SetSkeletonType(FbxSkeleton::eLimbNode);
-   lSkeletonLimbNodeAttribute2->Size.Set(1.0);
-   FbxNode* lSkeletonLimbNode2 = FbxNode::Create(lScene,lLimbNodeName2.Buffer());
-   lSkeletonLimbNode2->SetNodeAttribute(lSkeletonLimbNodeAttribute2);
-   lSkeletonLimbNode2->LclTranslation.Set(FbxVector4(0.0, 40.0, 0.0));
-
-   // Build skeleton node hierarchy.
-   lSkeletonRoot->AddChild(lSkeletonLimbNode1);
-   lSkeletonLimbNode1->AddChild(lSkeletonLimbNode2);
-   */
+   fbxScene->AddNode(rootNode);
 
    return rootNode;
 }
 
 void PackerFBX::createWeights()
 {
-
-
-
+   /*
    int i, j;
    FbxAMatrix lXMatrix;
 
@@ -390,6 +285,7 @@ void PackerFBX::createWeights()
    lSkin->AddCluster(lClusterToLimbNode1);
    lSkin->AddCluster(lClusterToLimbNode2);
    lPatchAttribute->AddDeformer(lSkin);
+   */
 }
 
 void PackerFBX::readRigFile(std::string filename,

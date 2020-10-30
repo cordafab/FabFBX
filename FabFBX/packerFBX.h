@@ -12,6 +12,7 @@ class PackerFBX
 {
 public:
    PackerFBX();
+
    bool createPacker(std::string rigPathFile);
    bool pack();
 
@@ -44,10 +45,10 @@ private:
    std::string pathNoFile;
    std::string filename;
 
-   FbxManager* lSdkManager;
-   FbxIOSettings * ios;
-   FbxScene* lScene;
-   bool lResult;
+   FbxManager* sdkManager;
+   FbxIOSettings * ioSettings;
+   FbxScene* fbxScene;
+   bool fbxSdkResult;
 
    FbxNode* mesh;
    FbxNode* skeletonRoot;
