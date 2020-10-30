@@ -68,12 +68,12 @@ bool PackerFBX::pack()
    std::string charFilename;
    std::string skelFilename;
 
-   readRigFile(fullPathFile,charFilename, skelFilename);
-   readOBJ(pathNoFile+charFilename, char_v, char_f);
-   readSkeletonFile(pathNoFile+skelFilename, joint_names, joint_fathers, joint_pos);
+   loadRigFile(fullPathFile,charFilename, skelFilename);
+   loadOBJ(pathNoFile+charFilename, char_v, char_f);
+   loadSkeleton(pathNoFile+skelFilename, joint_names, joint_fathers, joint_pos);
 
-   mesh = createMesh();
-   skeletonRoot = createSkeleton();
+   mesh = packCharacterGeometry();
+   skeletonRoot = packSkeletonTopology();
 
    // Build the node tree.
    FbxNode* lRootNode = fbxScene->GetRootNode();
@@ -144,7 +144,7 @@ void PackerFBX::saveFBX()
    }
 }
 
-FbxNode* PackerFBX::createMesh()
+FbxNode* PackerFBX::packCharacterGeometry()
 {
    FbxMesh* lMesh = FbxMesh::Create(fbxScene,"Character");
    lMesh->InitControlPoints(char_v.size());
@@ -173,7 +173,7 @@ FbxNode* PackerFBX::createMesh()
    return lNode;
 }
 
-FbxNode* PackerFBX::createSkeleton()
+FbxNode* PackerFBX::packSkeletonTopology()
 {
    std::string name = "Skeleton";
    FbxNode* rootNode;
@@ -215,7 +215,7 @@ FbxNode* PackerFBX::createSkeleton()
    return rootNode;
 }
 
-void PackerFBX::createWeights()
+void PackerFBX::packSkeletonWeights()
 {
    /*
    int i, j;
@@ -288,7 +288,12 @@ void PackerFBX::createWeights()
    */
 }
 
-void PackerFBX::readRigFile(std::string filename,
+void PackerFBX::packSkeletonAnimation()
+{
+
+}
+
+void PackerFBX::loadRigFile(std::string filename,
                             std::string & charFilename,
                             std::string & skelFilename)
 {
@@ -323,7 +328,7 @@ void PackerFBX::readRigFile(std::string filename,
    file.close();
 }
 
-void PackerFBX::readOBJ(std::string filename,
+void PackerFBX::loadOBJ(std::string filename,
                         std::vector<std::vector<float>> & v,
                         std::vector<std::vector<int>> & f)
 {
@@ -393,7 +398,7 @@ void PackerFBX::readOBJ(std::string filename,
    file.close();
 }
 
-void PackerFBX::readSkeletonFile(std::string filename,
+void PackerFBX::loadSkeleton(std::string filename,
                                  std::vector<std::string> & names,
                                  std::vector<int> & fathers,
                                  std::vector<std::vector<float>> & pos

@@ -102,9 +102,9 @@ private:
    std::string pathFileNoExt;
    std::string filename;
 
-   FbxManager * lSdkManager;
-   FbxIOSettings * ios;
-   FbxScene * lScene;
+   FbxManager * sdkManager;
+   FbxIOSettings * ioSettings;
+   FbxScene * fbxScene;
 };
 
 #endif // UNPACKERFBX_H

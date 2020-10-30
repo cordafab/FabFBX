@@ -5,9 +5,9 @@
 
 UnpackerFBX::UnpackerFBX()
 {
-   lSdkManager = nullptr;
-   ios = nullptr;
-   lScene = nullptr;
+   sdkManager = nullptr;
+   ioSettings = nullptr;
+   fbxScene = nullptr;
 }
 
 bool UnpackerFBX::createUnpacker(std::string fbxPathFile)
@@ -16,18 +16,18 @@ bool UnpackerFBX::createUnpacker(std::string fbxPathFile)
    std::size_t botDirPos = pathFileNoExt.find_last_of("/");
    filename = pathFileNoExt.substr(botDirPos+1, pathFileNoExt.length());
 
-   lSdkManager = FbxManager::Create();
-   ios = FbxIOSettings::Create(lSdkManager, IOSROOT );
-   lSdkManager->SetIOSettings(ios);
-   FbxImporter* lImporter = FbxImporter::Create(lSdkManager, "");
-   bool lImportStatus = lImporter->Initialize(fbxPathFile.c_str(), -1, lSdkManager->GetIOSettings());
+   sdkManager = FbxManager::Create();
+   ioSettings = FbxIOSettings::Create(sdkManager, IOSROOT );
+   sdkManager->SetIOSettings(ioSettings);
+   FbxImporter* lImporter = FbxImporter::Create(sdkManager, "");
+   bool lImportStatus = lImporter->Initialize(fbxPathFile.c_str(), -1, sdkManager->GetIOSettings());
 
    if(!lImportStatus) return false; //execStatus==false exit
 
    // Create a new scene so it can be populated by the imported file.
-   lScene = FbxScene::Create(lSdkManager,"myScene");
+   fbxScene = FbxScene::Create(sdkManager,"myScene");
    // Import the contents of the file into the scene.
-   lImporter->Import(lScene);
+   lImporter->Import(fbxScene);
    // The file has been imported; we can get rid of the importer.
    lImporter->Destroy();
 
@@ -135,7 +135,7 @@ bool UnpackerFBX::unpackCharacterGeometry(
 {
    //Load Character
    FbxNode * lRootNode = nullptr;
-   lRootNode = lScene->GetRootNode();
+   lRootNode = fbxScene->GetRootNode();
 
    if(lRootNode)
    {
@@ -226,7 +226,7 @@ bool UnpackerFBX::unpackSkeletonTopology(
 {
    FbxNode * lRootNode = nullptr;
    //Read FBX Skeleton
-   lRootNode = lScene->GetRootNode();
+   lRootNode = fbxScene->GetRootNode();
    if(lRootNode)
    {
       for(int i = 0; i < lRootNode->GetChildCount(); i++)
@@ -259,7 +259,7 @@ bool UnpackerFBX::unpackSkeletonWeights(
       )
 {
    FbxNode * lRootNode = nullptr;
-   lRootNode = lScene->GetRootNode();
+   lRootNode = fbxScene->GetRootNode();
 
    if(lRootNode)
    {
@@ -369,11 +369,11 @@ bool UnpackerFBX::unpackSkeletonAnimation(
    FbxLongLong mAnimationLength;
 
    int i;
-   for (i = 0; i < lScene->GetSrcObjectCount<FbxAnimStack>(); i++)
+   for (i = 0; i < fbxScene->GetSrcObjectCount<FbxAnimStack>(); i++)
    {
-      FbxAnimStack* lAnimStack = lScene->GetSrcObject<FbxAnimStack>(i);
+      FbxAnimStack* lAnimStack = fbxScene->GetSrcObject<FbxAnimStack>(i);
       FbxString animStackName = lAnimStack->GetName();
-      FbxTakeInfo* takeInfo = lScene->GetTakeInfo(animStackName);
+      FbxTakeInfo* takeInfo = fbxScene->GetTakeInfo(animStackName);
       startTime = takeInfo->mLocalTimeSpan.GetStart();
       stopTime = takeInfo->mLocalTimeSpan.GetStop();
       mAnimationLength = startTime.GetFrameCount(FbxTime::eFrames30) - stopTime.GetFrameCount(FbxTime::eFrames30) + 1;
@@ -385,7 +385,7 @@ bool UnpackerFBX::unpackSkeletonAnimation(
       currTime.SetFrame(i, FbxTime::eFrames30);
       double t = ((double)(currTime.GetMilliSeconds())) / 1000.0;
       std::vector<std::vector<double>> deformedKeyframes(jointsNames.size());
-      FbxNode* lRootNode = lScene->GetRootNode();
+      FbxNode* lRootNode = fbxScene->GetRootNode();
       if(lRootNode)
       {
          for(int j = 0; j < lRootNode->GetChildCount(); j++)
@@ -409,7 +409,7 @@ bool UnpackerFBX::list()
 {
    FbxNode * lRootNode = nullptr;
 
-   lRootNode = lScene->GetRootNode();
+   lRootNode = fbxScene->GetRootNode();
    if(lRootNode)
    {
       for(int i = 0; i < lRootNode->GetChildCount(); i++)

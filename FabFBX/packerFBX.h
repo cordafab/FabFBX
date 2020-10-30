@@ -16,28 +16,32 @@ public:
    bool createPacker(std::string rigPathFile);
    bool pack();
 
-   static void readRigFile(std::string filename,
-                           std::string & charFilename,
-                           std::string & skelFilename
-                           );
+   static void loadRigFile(
+         std::string filename,
+         std::string & charFilename,
+         std::string & skelFilename
+         );
 
-   static void readOBJ(std::string filename,
-                       std::vector<std::vector<float> > & v,
-                       std::vector<std::vector<int> > & f
-                       );
+   static void loadOBJ(
+         std::string filename,
+         std::vector<std::vector<float> > & v,
+         std::vector<std::vector<int> > & f
+         );
 
-   static void readSkeletonFile(std::string filename,
-                                std::vector<std::string> & names,
-                                std::vector<int> & fathers,
-                                std::vector<std::vector<float>> & pos
-                                );
+   static void loadSkeleton(
+         std::string filename,
+         std::vector<std::string> & names,
+         std::vector<int> & fathers,
+         std::vector<std::vector<float>> & pos
+         );
 
 private:
    void saveFBX();
 
-   FbxNode* createMesh();
-   FbxNode* createSkeleton();
-   void createWeights();
+   FbxNode* packCharacterGeometry();
+   FbxNode* packSkeletonTopology();
+   void packSkeletonWeights();
+   void packSkeletonAnimation();
 
 
    std::string fullPathFile;
@@ -48,6 +52,7 @@ private:
    FbxManager* sdkManager;
    FbxIOSettings * ioSettings;
    FbxScene* fbxScene;
+
    bool fbxSdkResult;
 
    FbxNode* mesh;
