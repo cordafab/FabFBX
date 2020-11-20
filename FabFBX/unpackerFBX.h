@@ -34,7 +34,7 @@ public:
    bool unpackSkeletonTopology(
          const std::string & skeletonNodeName,
          std::vector<std::string> & jointsNames,
-         std::vector<double> & jointsPositions,
+         std::vector<std::vector<double>> & jointsPositions,
          std::vector<int> & fathers,
          std::map<std::string, unsigned long> & jointIdByName
          );
@@ -54,9 +54,8 @@ public:
 
    bool list();
 
-   static void navigateSkeleton(
-         std::vector<std::string> & names,
-         std::vector<double> & jointsPositions,
+   static void navigateSkeleton(std::vector<std::string> & names,
+         std::vector<std::vector<double> > & joints,
          std::vector<int> & fathers,
          FbxNode * node,
          int father
@@ -68,10 +67,9 @@ public:
          const std::vector<std::vector<int> > & f
          );
 
-   static void saveSkeleton(
-         const std::string & filename,
+   static void saveSkeleton(const std::string & filename,
          const std::vector<std::string> & names,
-         const std::vector<double> & jointsPositions,
+         const std::vector<std::vector<double> > & joints,
          const std::vector<int> & fathers
          );
 

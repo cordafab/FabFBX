@@ -44,7 +44,7 @@ bool UnpackerFBX::unpack(int flag, std::string characterName, std::string skelet
       UnpackerFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
       std::vector<std::string> jointsNames;
-      std::vector<double> jointsPositions;
+      std::vector<std::vector<double>> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
       unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
@@ -63,7 +63,7 @@ bool UnpackerFBX::unpack(int flag, std::string characterName, std::string skelet
    if(flag==ANIM)
    {
       std::vector<std::string> jointsNames;
-      std::vector<double> jointsPositions;
+      std::vector<std::vector<double>> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
       unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
@@ -108,7 +108,7 @@ bool UnpackerFBX::unpack(int flag, std::string characterName, std::string skelet
       UnpackerFBX::saveOBJ(pathFileNoExt+".obj", v, f);
 
       std::vector<std::string> jointsNames;
-      std::vector<double> jointsPositions;
+      std::vector<std::vector<double>> jointsPositions;
       std::vector<int> fathers;
       std::map<std::string, unsigned long> jointIdByName;
       unpackSkeletonTopology(skeletonName, jointsNames, jointsPositions, fathers, jointIdByName);
@@ -219,7 +219,7 @@ bool UnpackerFBX::unpackCharacterGeometry(
 bool UnpackerFBX::unpackSkeletonTopology(
       const std::string & skeletonNodeName,
       std::vector<std::string> & jointsNames,
-      std::vector<double> & jointsPositions,
+      std::vector<std::vector<double>> & jointsPositions,
       std::vector<int> & fathers,
       std::map<std::string, unsigned long> & jointIdByName
       )
@@ -424,7 +424,7 @@ bool UnpackerFBX::list()
 
 //Skeleton
 void UnpackerFBX::navigateSkeleton(std::vector<std::string> & names,
-                              std::vector<double>      & jointsPositions,
+                              std::vector<std::vector<double>> & joints,
                               std::vector<int>         & fathers,
                               FbxNode                  * node,
                               int                        father)
@@ -438,25 +438,27 @@ void UnpackerFBX::navigateSkeleton(std::vector<std::string> & names,
 
    names.push_back(node->GetName());
 
-   jointsPositions.push_back(lTranslation[0]);
-   jointsPositions.push_back(lTranslation[1]);
-   jointsPositions.push_back(lTranslation[2]);
+   joints.push_back(fromFbxMatrixToVector(t0));
+
+   //jointsPositions.push_back(lTranslation[0]);
+   //jointsPositions.push_back(lTranslation[1]);
+   //jointsPositions.push_back(lTranslation[2]);
 
    fathers.push_back(father);
 
    for(int i = 0; i < node->GetChildCount(); i++)
    {
       UnpackerFBX::navigateSkeleton(names,
-                               jointsPositions,
+                               joints,
                                fathers,
                                node->GetChild(i),
                                nodeId);
    }
 }
 
-void UnpackerFBX::saveSkeleton (const std::string                 & filename,
+void UnpackerFBX::saveSkeleton (const std::string            & filename,
                            const std::vector<std::string>    & names,
-                           const std::vector<double>         & jointsPositions,
+                           const std::vector<std::vector<double>>         & joints,
                            const std::vector<int>            & fathers)
 {
    std::ofstream fp;
@@ -476,14 +478,16 @@ void UnpackerFBX::saveSkeleton (const std::string                 & filename,
 
    for( unsigned long i = 0; i < names.size(); ++i )
    {
+      std::vector<double> kf = joints[i];
       fp << "j "
          << i << " "
          << names[i] << " "
          << fathers[i] << " "
-         << jointsPositions[i*3+0] << " "
-         << jointsPositions[i*3+1] << " "
-         << jointsPositions[i*3+2]
-         << std::endl;
+         << kf[0] << " "  << kf[1] << " "  << kf[2]  << " " << kf[3]  << " "
+         << kf[4] << " "  << kf[5] << " "  << kf[6]  << " " << kf[7]  << " "
+         << kf[8] << " "  << kf[9] << " "  << kf[10] << " " << kf[11] << " "
+         << kf[12] << " " << kf[13] << " " << kf[14] << " " << kf[15] <<
+            std::endl;
    }
 
    fp.close();
@@ -547,7 +551,7 @@ void UnpackerFBX::saveAnimation(const std::string & filename,
       std::cout << "Export Skeleton Animation: " << filename << std::endl;
    }
 
-   fp << "t " << "rt" << std::endl;   //animation exported rt curve (rotation & translation x, y, z components) OR M matrix (local transformation)
+   //fp << "t " << "rt" << std::endl;   //animation exported rt curve (rotation & translation x, y, z components) OR M matrix (local transformation)
 
    for( unsigned long  i = 0; i < t.size(); ++i )
    {
@@ -562,18 +566,18 @@ void UnpackerFBX::saveAnimation(const std::string & filename,
 
          std::vector<double> kf = skelKeyframes[i][j];
 
-         /*fp << "s "  //skel
+         fp << "s "  //skel
             << i << " "
             << kf[0] << " "  << kf[1] << " "  << kf[2]  << " " << kf[3]  << " "
             << kf[4] << " "  << kf[5] << " "  << kf[6]  << " " << kf[7]  << " "
             << kf[8] << " "  << kf[9] << " "  << kf[10] << " " << kf[11] << " "
             << kf[12] << " " << kf[13] << " " << kf[14] << " " << kf[15] <<
-               std::endl;*/
-         fp << "s "  //skel
+               std::endl;
+         /*fp << "s "  //skel
             << i << " "
             << kf[0] << " " << kf[1] << " " << kf[2] << " "
             << kf[3] << " " << kf[4] << " " << kf[5] <<
-               std::endl;
+               std::endl;*/
 
       }
    }
@@ -587,7 +591,7 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                              * n
                                    double   scaleFactor)
 {
    unsigned long i = nodeIdByName.at(node->GetName());
-   FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
+   /*FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
    FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
@@ -610,7 +614,11 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                              * n
       if(lAnimCurveNodeRx) { keyframe[0] = lAnimCurveNodeRx->Evaluate(t); }
       if(lAnimCurveNodeRy) { keyframe[1] = lAnimCurveNodeRy->Evaluate(t); }
       if(lAnimCurveNodeRz) { keyframe[2] = lAnimCurveNodeRz->Evaluate(t); }
-   }
+   }*/
+
+   FbxAMatrix defMat  = node->EvaluateGlobalTransform(t);
+
+   std::vector<double> keyframe = fromFbxMatrixToVector(defMat);
 
    deformedKeyframes[i] = keyframe;
 
