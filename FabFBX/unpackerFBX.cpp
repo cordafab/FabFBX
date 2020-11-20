@@ -441,6 +441,9 @@ void UnpackerFBX::navigateSkeleton(std::vector<std::string> & names,
    jointsPositions.push_back(lTranslation[0]);
    jointsPositions.push_back(lTranslation[1]);
    jointsPositions.push_back(lTranslation[2]);
+   jointsPositions.push_back(lRotation[0]);
+   jointsPositions.push_back(lRotation[1]);
+   jointsPositions.push_back(lRotation[2]);
 
    fathers.push_back(father);
 
@@ -480,9 +483,12 @@ void UnpackerFBX::saveSkeleton (const std::string                 & filename,
          << i << " "
          << names[i] << " "
          << fathers[i] << " "
-         << jointsPositions[i*3+0] << " "
-         << jointsPositions[i*3+1] << " "
-         << jointsPositions[i*3+2]
+         << jointsPositions[i*6+0] << " "
+         << jointsPositions[i*6+1] << " "
+         << jointsPositions[i*6+2] << " "
+         << jointsPositions[i*6+3] << " "
+         << jointsPositions[i*6+4] << " "
+         << jointsPositions[i*6+5]
          << std::endl;
    }
 
@@ -580,7 +586,7 @@ void UnpackerFBX::saveAnimation(const std::string & filename,
    fp.close();
 }
 
-void UnpackerFBX::getNodeKeyframe(      FbxNode                              * node,
+void UnpackerFBX::getNodeKeyframe(      FbxNode                         * node,
                                    const FbxTime                        & t,
                                    std::vector<std::vector<double>>     & deformedKeyframes,
                                    const std::map<std::string, unsigned long> & nodeIdByName,
@@ -590,7 +596,7 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                              * n
    FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
-   FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
+   /*FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
    if(lAnimCurveNodeT)
    {
       FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
@@ -610,7 +616,17 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                              * n
       if(lAnimCurveNodeRx) { keyframe[0] = lAnimCurveNodeRx->Evaluate(t); }
       if(lAnimCurveNodeRy) { keyframe[1] = lAnimCurveNodeRy->Evaluate(t); }
       if(lAnimCurveNodeRz) { keyframe[2] = lAnimCurveNodeRz->Evaluate(t); }
-   }
+   }*/
+
+   FbxVector4 rot = defMat.GetR();
+   FbxVector4 transl = defMat.GetT();
+
+   keyframe[0] = rot[0];
+   keyframe[1] = rot[1];
+   keyframe[2] = rot[2];
+   keyframe[3] = transl[0];
+   keyframe[4] = transl[1];
+   keyframe[5] = transl[2];
 
    deformedKeyframes[i] = keyframe;
 
