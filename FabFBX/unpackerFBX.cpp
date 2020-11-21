@@ -593,10 +593,10 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                         * node,
                                    double   scaleFactor)
 {
    unsigned long i = nodeIdByName.at(node->GetName());
-   FbxAMatrix defMat  = node->EvaluateLocalTransform(t);
+   FbxAMatrix defMat  = node->EvaluateGlobalTransform(t);
    std::vector<double> keyframe(6); //rx, ry, rz, tx, ty, tz
 
-   FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
+   /*FbxAnimCurveNode* lAnimCurveNodeT = node->LclTranslation.GetCurveNode();
    if(lAnimCurveNodeT)
    {
       FbxAnimCurve* lAnimCurveNodeTx = lAnimCurveNodeT->GetCurve(0);
@@ -616,9 +616,9 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                         * node,
       if(lAnimCurveNodeRx) { keyframe[0] = lAnimCurveNodeRx->Evaluate(t); }
       if(lAnimCurveNodeRy) { keyframe[1] = lAnimCurveNodeRy->Evaluate(t); }
       if(lAnimCurveNodeRz) { keyframe[2] = lAnimCurveNodeRz->Evaluate(t); }
-   }
+   }*/
 
-   /*FbxVector4 rot = defMat.GetR();
+   FbxVector4 rot = defMat.GetR();
    FbxVector4 transl = defMat.GetT();
 
    keyframe[0] = rot[0];
@@ -626,7 +626,7 @@ void UnpackerFBX::getNodeKeyframe(      FbxNode                         * node,
    keyframe[2] = rot[2];
    keyframe[3] = transl[0];
    keyframe[4] = transl[1];
-   keyframe[5] = transl[2];*/
+   keyframe[5] = transl[2];
 
    deformedKeyframes[i] = keyframe;
 
