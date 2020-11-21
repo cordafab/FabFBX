@@ -22,19 +22,19 @@ public:
    bool createUnpacker(std::string fbxPathFile);
 
    bool unpack(int flag,
-                std::string characterName = "Character",
-                std::string skeletonName  = "Skeleton"
-                );
+               std::string characterName = "Character",
+               std::string skeletonName  = "Skeleton"
+                                           );
 
    bool unpackCharacterGeometry(
          const std::string & characterNodeName,
          std::vector<double> & v,
          std::vector<std::vector<int>> & f
          );
-   bool unpackSkeletonTopology(
+   bool unpackSkeleton(
          const std::string & skeletonNodeName,
          std::vector<std::string> & jointsNames,
-         std::vector<double> & jointsPositions,
+         std::vector<double> & jointsRT,
          std::vector<int> & fathers,
          std::map<std::string, unsigned long> & jointIdByName
          );
@@ -56,7 +56,7 @@ public:
 
    static void navigateSkeleton(
          std::vector<std::string> & names,
-         std::vector<double> & jointsPositions,
+         std::vector<double> & jointsRT,
          std::vector<int> & fathers,
          FbxNode * node,
          int father
@@ -68,10 +68,9 @@ public:
          const std::vector<std::vector<int> > & f
          );
 
-   static void saveSkeleton(
-         const std::string & filename,
+   static void saveSkeleton(const std::string & filename,
          const std::vector<std::string> & names,
-         const std::vector<double> & jointsPositions,
+         const std::vector<double> & jointsRT,
          const std::vector<int> & fathers
          );
 
