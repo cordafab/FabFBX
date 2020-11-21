@@ -476,6 +476,9 @@ void UnpackerFBX::saveSkeleton (const std::string                 & filename,
       std::cout << "Export skeleton: " << filename << std::endl;
    }
 
+   fp << "# Composition of the .skt file:" << std::endl;
+   fp << "# j <jointIndex> <jointName> <fatherIndex> <(globalRotation) x y z> <(globalTranslation) x y z>" << std::endl << std::endl;
+
    for( unsigned long i = 0; i < names.size(); ++i )
    {
       fp << "j "
@@ -555,7 +558,7 @@ void UnpackerFBX::saveAnimation(const std::string & filename,
    //fp << "t " << "rt" << std::endl;   //animation exported rt curve (rotation & translation x, y, z components) OR M matrix (local transformation)
 
    fp << "#V3" << std::endl;
-   fp << "#Each skeleton keyframe is defined as [rx ry rz tx ty tz] of the global current pose" << std::endl << std::endl;
+   fp << "# Each skeleton keyframe is defined as [rx ry rz tx ty tz] of the global current pose" << std::endl << std::endl;
 
    for( unsigned long  i = 0; i < t.size(); ++i )
    {
