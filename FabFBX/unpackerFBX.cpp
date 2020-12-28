@@ -481,6 +481,11 @@ void UnpackerFBX::saveSkeleton (const std::string                 & filename,
 
    for( unsigned long i = 0; i < names.size(); ++i )
    {
+
+      //Remove spaces from joint names
+      std::string name = names[i];
+      std::replace(name.begin(), name.end(), ' ', '_');
+
       fp << "j "
          << i << " "
          << names[i] << " "
